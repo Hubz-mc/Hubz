@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -74,7 +72,7 @@ header h1 span{color:#ff6b35}
 .stab.active .sprice{color:#ff6b35}
 .price-big{font-size:30px;font-weight:900;color:#fff;margin-bottom:2px}
 .price-inst{font-size:13px;color:#777;margin-bottom:18px}
-.btn-go{display:block;width:100%;padding:17px;background:#ff6b35;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;text-align:center;cursor:pointer;text-decoration:none;letter-spacing:0.2px}
+.btn-go{display:block;width:100%;padding:17px;background:#ff6b35;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;text-align:center;cursor:pointer;letter-spacing:0.2px;font-family:inherit}
 .btn-go:active{background:#e55a28}
 .close-btn{position:absolute;top:14px;right:14px;width:32px;height:32px;background:rgba(0,0,0,0.5);border:none;border-radius:50%;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .modal-wrap{position:relative}
@@ -172,7 +170,7 @@ header h1 span{color:#ff6b35}
       <div class="store-tabs" id="m-tabs"></div>
       <div class="price-big" id="m-price"></div>
       <div class="price-inst" id="m-inst"></div>
-      <a class="btn-go" id="m-btn" href="#" target="_blank" rel="noopener">Ver na loja</a>
+      <button class="btn-go" id="m-btn" onclick="if(this.dataset.href){window.open(this.dataset.href,'_blank','noopener');}" data-href="#">Ver na loja</button>
     </div>
   </div>
 </div>
@@ -284,7 +282,7 @@ function atualizarPreco(p,i){
   document.getElementById('m-price').textContent=l.preco;
   document.getElementById('m-inst').textContent=l.parcelas;
   const btn=document.getElementById('m-btn');
-  btn.href=l.link;
+  btn.dataset.href=l.link;
   btn.textContent=`Comprar na ${l.nome}`;
 }
 
