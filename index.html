@@ -407,6 +407,13 @@ renderCarousel();
 renderSidebarDesktop();
 renderGrid(produtos.filter(p=>!promocoes.some(pr=>pr.produtoId===p.id)));
 window.scrollTo(0, 0);
+
+// Fecha o modal quando o usuário volta pra página (botão voltar do Chrome)
+window.addEventListener('pageshow', function() { fecharModal(); });
+window.addEventListener('focus', function() { fecharModal(); });
+document.addEventListener('visibilitychange', function() {
+  if(document.visibilityState === 'visible') fecharModal();
+});
 </script>
 </body>
 </html>
