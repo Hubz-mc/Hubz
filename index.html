@@ -170,7 +170,7 @@ header h1 span{color:#ff6b35}
       <div class="store-tabs" id="m-tabs"></div>
       <div class="price-big" id="m-price"></div>
       <div class="price-inst" id="m-inst"></div>
-      <button class="btn-go" id="m-btn" onclick="if(this.dataset.href){window.open(this.dataset.href,'_blank','noopener');}" data-href="#">Ver na loja</button>
+      <button class="btn-go" id="m-btn" onclick="if(this.dataset.href){fecharModal();window.open(this.dataset.href,'_blank','noopener');}" data-href="#">Ver na loja</button>
     </div>
   </div>
 </div>
@@ -288,7 +288,7 @@ function atualizarPreco(p,i){
 
 document.getElementById('close-btn').onclick=fecharModal;
 document.getElementById('overlay').onclick=e=>{if(e.target===document.getElementById('overlay'))fecharModal()};
-function fecharModal(){document.getElementById('overlay').classList.remove('open');document.body.style.overflow='';}
+function fecharModal(){document.getElementById('overlay').classList.remove('open');document.body.style.overflow='';document.documentElement.style.overflow='';}
 
 function renderGrid(lista){
   const g=document.getElementById('grid');
