@@ -188,6 +188,8 @@ header h1 span{color:#ff6b35}
   visibility:hidden;
   pointer-events:none;
   transition:opacity 0.25s ease, visibility 0.25s ease;
+  overscroll-behavior:none;
+  touch-action:none;
 }
 .overlay.open{
   opacity:1;
@@ -201,7 +203,7 @@ header h1 span{color:#ff6b35}
 .overlay.open .modal{
   transform:translateY(0);
 }
-.modal{background:#1c1c1e;border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding-bottom:32px}
+.modal{background:#1c1c1e;border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding-bottom:32px;overscroll-behavior:contain;touch-action:pan-y;}
 
 /* Modal image with gallery hint */
 .modal-img-wrap{position:relative;cursor:pointer;overflow:hidden;border-radius:24px 24px 0 0}
@@ -443,6 +445,7 @@ const produtos = [
     features:["Algodão","Lisa","Passeio"],
     lojas:[
       {nome:"Shopee",preco:"R$ 78,66",parcelas:"12x de R$ 8,04",link:"https://s.shopee.com.br/5flSWgEUTF?share_channel_code=1"},
+      {nome:"Mercado Livre",preco:"R$ 82,00",parcelas:"12x de R$ 8,40",link:"https://www.mercadolivre.com.br"},
     ]
   },
   {
@@ -572,6 +575,8 @@ function abrirModal(p) {
   document.body.style.overflow = 'hidden';
   document.body.style.position = 'fixed';
   document.body.style.width = '100%';
+  document.body.style.overscrollBehavior = 'none';
+  document.documentElement.style.overscrollBehavior = 'none';
 }
 
 function atualizarPreco(p,i){
@@ -590,6 +595,8 @@ function fecharModal(){
   document.body.style.overflow = '';
   document.body.style.position = '';
   document.body.style.width = '';
+  document.body.style.overscrollBehavior = '';
+  document.documentElement.style.overscrollBehavior = '';
 }
 
 /* ═══════════ GALERIA LIGHTBOX ═══════════ */
