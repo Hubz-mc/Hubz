@@ -4,12 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Minhas Indicações</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;scrollbar-width:none;-webkit-tap-highlight-color:transparent}
 *::-webkit-scrollbar{display:none}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f0f;color:#fff;max-width:480px;margin:0 auto;min-height:100vh}
 
-header{padding:20px 16px 12px;background:#0f0f0f;position:sticky;top:0;z-index:10}
+header{padding:20px 16px 0;background:#0f0f0f;position:sticky;top:0;z-index:10}
 .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 header h1{font-size:22px;font-weight:800;letter-spacing:-0.5px}
 header h1 span{color:#ff6b35}
@@ -27,7 +29,7 @@ header h1 span{color:#ff6b35}
 .badge{position:absolute;top:8px;left:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(255,107,53,0.9);color:#fff;border-radius:6px;padding:3px 7px;backdrop-filter:blur(4px)}
 
 .card-body{padding:10px 10px 12px}
-.card-name{font-size:13px;font-weight:700;line-height:1.3;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-name{font-size:13px;font-weight:700;line-height:1.3;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-price{font-size:15px;font-weight:800;color:#ff6b35;margin-bottom:8px}
 .card-price small{font-size:10px;color:#888;font-weight:400;display:block;margin-top:1px}
 
@@ -35,29 +37,166 @@ header h1 span{color:#ff6b35}
 .btn-mini:active{background:#e55a28}
 
 /* CAROUSEL */
-.promo-carousel{padding:14px 0 6px;background:#0f0f0f}
-.promo-label{font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.8px;padding:0 16px;margin-bottom:10px}
-.carousel-track{display:flex;gap:10px;overflow-x:auto;padding:0 16px 10px 16px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-padding-left:16px}
+.promo-carousel{padding:16px 0 8px;background:#0f0f0f}
+.promo-label{font-size:11px;font-weight:700;color:#ff6b35;text-transform:uppercase;letter-spacing:1.2px;padding:0 16px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.promo-label-fire{font-size:16px;animation:firePop 1s ease-in-out infinite alternate}
+@keyframes firePop{from{transform:scale(1)}to{transform:scale(1.2)}}
+.promo-label::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(255,107,53,0.4),transparent)}
+.carousel-track{display:flex;gap:14px;overflow-x:auto;padding:4px 16px 14px 16px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-padding-left:16px}
 .carousel-track::-webkit-scrollbar{display:none}
-.promo-card{flex:0 0 220px;background:linear-gradient(135deg,#1c1c1e,#2c2c2e);border-radius:16px;overflow:hidden;scroll-snap-align:start;cursor:pointer;position:relative;transition:transform 0.15s}
-.promo-card:active{transform:scale(0.97)}
-.promo-card-img{width:100%;height:110px;object-fit:cover;display:block}
-.promo-card-body{padding:10px 12px 12px}
-.promo-tag{font-size:10px;font-weight:700;text-transform:uppercase;color:#ff6b35;letter-spacing:0.5px;margin-bottom:4px}
-.promo-title{font-size:13px;font-weight:700;line-height:1.3;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.promo-row{display:flex;align-items:center;justify-content:space-between;gap:6px}
-.promo-price{font-size:15px;font-weight:900;color:#ff6b35}
-.promo-discount{font-size:10px;font-weight:700;background:#ff6b35;color:#fff;border-radius:5px;padding:2px 6px}
-.promo-dots{display:flex;justify-content:center;gap:5px;padding-bottom:4px}
-.promo-dots span{width:6px;height:6px;border-radius:50%;background:#2c2c2e;transition:background 0.2s}
-.promo-dots span.active{background:#ff6b35;width:16px;border-radius:3px}
 
-/* MODAL */
+/* Card principal */
+.promo-card-wrap{
+  flex:0 0 250px;
+  border-radius:18px;
+  scroll-snap-align:start;
+  border:2px solid transparent;
+  transition:border-color 0.6s, transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+  animation:cardEntrance 0.5s ease both;
+}
+.promo-card-wrap:nth-child(2){animation-delay:0.1s}
+.promo-card-wrap:nth-child(3){animation-delay:0.2s}
+.promo-card-wrap.focused{
+  border-color:#ff6b35;
+  transform:scale(1.012);
+}
+.promo-card{
+  border-radius:16px;
+  overflow:hidden;
+  cursor:pointer;
+  position:relative;
+  background:#161616;
+  box-shadow:0 10px 36px rgba(0,0,0,0.6);
+  transition:transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+@keyframes cardEntrance{
+  from{opacity:0;transform:translateY(18px) scale(0.95)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+.promo-card:active{transform:scale(0.96)}
+.promo-card:hover{box-shadow:0 10px 40px rgba(0,0,0,0.7)}
+.promo-card.focused .promo-card-img{transform:scale(1.02);transition:transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94)}
+
+/* Imagem */
+.promo-card-img{width:100%;height:130px;object-fit:cover;display:block;transition:transform 0.4s}
+.promo-card:hover .promo-card-img{transform:scale(1.05)}
+.promo-img-overlay{position:absolute;top:0;left:0;right:0;height:130px;background:linear-gradient(to bottom,rgba(0,0,0,0.05) 30%,rgba(0,0,0,0.82) 100%);pointer-events:none}
+
+/* Título + badge sobre a imagem */
+.promo-img-footer{position:absolute;top:92px;left:0;right:0;padding:0 13px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.promo-title-over{font-size:14px;font-weight:800;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,0.7);line-height:1.2;flex:1}
+
+/* Badge de desconto */
+.promo-badge-desc{
+  flex-shrink:0;
+  font-size:13px;font-weight:900;
+  background:linear-gradient(135deg,#ff6b35,#ff3d00);
+  color:#fff;border-radius:10px;
+  padding:5px 11px;
+  letter-spacing:0.3px;
+  box-shadow:0 3px 12px rgba(255,61,0,0.55);
+  animation:glow 2s ease-in-out infinite;
+}
+@keyframes glow{
+  0%,100%{box-shadow:0 3px 12px rgba(255,61,0,0.55)}
+  50%{box-shadow:0 3px 22px rgba(255,61,0,0.9),0 0 8px rgba(255,107,53,0.4)}
+}
+
+/* Corpo */
+.promo-card-body{padding:8px 11px 10px;background:#161616}
+.promo-tag{font-size:8px;font-weight:800;text-transform:uppercase;color:#ff6b35;letter-spacing:1px;margin-bottom:4px}
+
+/* Preços */
+.promo-prices-row{display:flex;align-items:baseline;gap:6px;margin-bottom:8px}
+.promo-price{font-size:18px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+.promo-original{font-size:11px;color:#444;text-decoration:line-through;font-weight:500}
+
+/* Rodapé do card: timer + botão lado a lado */
+.promo-card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px}
+
+/* Timer */
+.promo-timer{
+  font-size:10px;font-weight:800;color:#ff6b35;
+  background:rgba(255,107,53,0.08);
+  border:1px solid rgba(255,107,53,0.25);
+  border-radius:8px;padding:4px 8px;
+  display:inline-flex;align-items:center;gap:4px;
+  letter-spacing:0.8px;font-variant-numeric:tabular-nums;
+  flex-shrink:0;
+}
+
+/* Botão Ver oferta */
+.promo-btn{
+  flex:1;
+  background:linear-gradient(135deg,#ff6b35,#ff3d00);
+  color:#fff;border:none;border-radius:10px;
+  padding:7px 12px;font-size:12px;font-weight:800;
+  cursor:pointer;text-align:center;
+  letter-spacing:0.3px;
+  transition:opacity 0.15s, transform 0.15s;
+}
+.promo-btn:active{opacity:0.85;transform:scale(0.97)}
+
+/* Alerta expirado */
+.promo-expired-alert{
+  font-size:10px;font-weight:700;color:#f5a623;
+  background:rgba(245,166,35,0.08);
+  border:1px solid rgba(245,166,35,0.22);
+  border-radius:8px;padding:6px 10px;line-height:1.4;width:100%;
+}
+
+/* Dots */
+.promo-dots{display:flex;justify-content:center;gap:5px;padding-bottom:4px}
+.promo-dots span{width:6px;height:6px;border-radius:50%;background:#2c2c2e;transition:all 0.2s}
+.promo-dots span.active{background:#ff6b35;width:22px;border-radius:3px}
+
+/* LABEL SEÇÃO */
+.section-label{font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:1.2px;padding:16px 16px 0;margin-bottom:2px;display:flex;align-items:center;gap:8px}
+.section-label-icon{font-size:15px}
+.section-label::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(255,255,255,0.12),transparent)}
+
+/* FILTROS */
+.filter-bar{display:flex;gap:8px;padding:10px 0 12px 0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-btn{flex-shrink:0;padding:7px 16px;border-radius:20px;border:1.5px solid #2c2c2e;background:transparent;color:#888;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.18s;letter-spacing:0.3px;white-space:nowrap}
+.filter-btn.active{background:#ff6b35;border-color:#ff6b35;color:#fff}
+.filter-btn:active{transform:scale(0.95)}
+
+/* Mensagem empty state */
+.empty-state{grid-column:1/-1;text-align:center;padding:40px 20px;color:#444;font-size:14px}
+.empty-state span{font-size:28px;display:block;margin-bottom:8px}
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;align-items:flex-end;justify-content:center}
 .overlay.open{display:flex}
 .modal{background:#1c1c1e;border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding-bottom:32px}
-.modal-img{width:100%;height:220px;object-fit:cover;border-radius:24px 24px 0 0}
-.modal-body{padding:16px 18px}
+
+/* Modal image with gallery hint */
+.modal-img-wrap{position:relative;cursor:pointer;overflow:hidden;border-radius:24px 24px 0 0}
+.modal-img{width:100%;height:220px;object-fit:cover;display:block;transition:transform 0.2s}
+.modal-img-wrap:hover .modal-img{transform:scale(1.02)}
+.gallery-hint{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);border-radius:8px;padding:5px 10px;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#fff;pointer-events:none;transition:opacity 0.2s}
+.gallery-hint svg{opacity:0.9}
+.img-counter{position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;color:#fff;pointer-events:none}
+
+.modal-body{padding:16px 20px 4px}
+.modal-price-overlay{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:32px 16px 14px;
+  background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+  pointer-events:none;
+}
+.modal-price-badge{
+  display:inline-flex;align-items:baseline;gap:6px;
+  background:rgba(0,0,0,0.45);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:14px;
+  padding:8px 14px;
+}
+.modal-price-value{font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1}
+.modal-price-inst{font-size:11px;font-weight:600;color:rgba(255,255,255,0.6);margin-left:2px}
+
+
 .modal-badge{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;background:rgba(255,107,53,0.15);color:#ff6b35;border-radius:7px;padding:4px 9px;margin-bottom:8px}
 .modal-name{font-size:20px;font-weight:800;line-height:1.3;margin-bottom:6px}
 .modal-desc{font-size:14px;color:#aaa;line-height:1.6;margin-bottom:14px}
@@ -72,52 +211,85 @@ header h1 span{color:#ff6b35}
 .stab.active .sprice{color:#ff6b35}
 .price-big{font-size:30px;font-weight:900;color:#fff;margin-bottom:2px}
 .price-inst{font-size:13px;color:#777;margin-bottom:18px}
-.btn-go{display:block;width:100%;padding:17px;background:#ff6b35;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;text-align:center;cursor:pointer;letter-spacing:0.2px;font-family:inherit}
+.btn-go{display:block;width:100%;padding:13px;background:#ff6b35;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;text-align:center;cursor:pointer;letter-spacing:0.2px;font-family:inherit}
 .btn-go:active{background:#e55a28}
-.close-btn{position:absolute;top:14px;right:14px;width:32px;height:32px;background:rgba(0,0,0,0.5);border:none;border-radius:50%;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.close-btn{position:absolute;top:14px;right:14px;width:32px;height:32px;background:rgba(0,0,0,0.5);border:none;border-radius:50%;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);z-index:2}
 .modal-wrap{position:relative}
 
+/* ═══════════════════════════════════
+   GALERIA LIGHTBOX
+═══════════════════════════════════ */
+.gallery-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:200;flex-direction:column;align-items:center;justify-content:center}
+.gallery-overlay.open{display:flex}
+
+.gallery-close{position:absolute;top:16px;right:16px;width:40px;height:40px;background:rgba(255,255,255,0.1);border:none;border-radius:50%;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);z-index:3;transition:background 0.15s}
+.gallery-close:hover{background:rgba(255,255,255,0.2)}
+
+/* Main image area */
+.gallery-main{position:relative;width:100%;flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:pan-y pinch-zoom;margin-top:48px;margin-bottom:0}
+.gallery-slides{display:flex;height:100%;transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);will-change:transform}
+.gallery-slide{flex:0 0 100%;display:flex;align-items:center;justify-content:center;padding:0 60px}
+.gallery-slide img{max-width:100%;max-height:calc(100vh - 260px);object-fit:contain;border-radius:12px;user-select:none;-webkit-user-drag:none;pointer-events:none}
+
+/* Arrow buttons */
+.gallery-arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;background:rgba(255,255,255,0.12);border:none;border-radius:50%;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);z-index:2;transition:background 0.15s;user-select:none}
+.gallery-arrow:hover{background:rgba(255,255,255,0.22)}
+.gallery-arrow:active{background:rgba(255,107,53,0.5)}
+.gallery-arrow.prev{left:10px}
+.gallery-arrow.next{right:10px}
+.gallery-arrow.hidden{opacity:0;pointer-events:none}
+
+/* Thumbnails */
+.gallery-thumbs{display:flex;gap:8px;padding:16px 16px 24px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;max-width:100%;flex-shrink:0}
+.gallery-thumbs::-webkit-scrollbar{display:none}
+.gallery-thumb{flex:0 0 56px;height:56px;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s,opacity 0.15s;scroll-snap-align:start;opacity:0.5}
+.gallery-thumb.active{border-color:#ff6b35;opacity:1}
+.gallery-thumb img{width:100%;height:100%;object-fit:cover;pointer-events:none}
+
+/* Counter */
+.gallery-counter{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:600;color:#fff}
+
 /* ═══════════════════════════════════════
-   APENAS DESKTOP — nada abaixo afeta
-   o layout mobile original
+   APENAS DESKTOP
 ═══════════════════════════════════════ */
 @media(min-width:860px){
   body{max-width:none}
 
-  header{padding:20px 40px 14px;border-bottom:1px solid #1c1c1e}
-  .header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:16px}
+  header{padding:0 40px 0;border-bottom:1px solid #1c1c1e;max-width:none}
+  .header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:18px 0 12px}
   .header-top{margin-bottom:0;flex:none}
-  .search-bar{flex:1;max-width:420px;margin-bottom:0}
+  .filter-bar{max-width:1200px;margin:0 auto;padding:8px 0 12px 0}
+  .search-bar{flex:none;width:280px;margin:0}
 
-  .desktop-wrap{max-width:1200px;margin:0 auto;display:flex;gap:0}
-
-  /* Sidebar de promoções */
-  .sidebar-desktop{width:230px;flex-shrink:0;padding:20px 0 40px;position:sticky;top:65px;max-height:calc(100vh - 65px);overflow-y:auto;scrollbar-width:none}
+  .desktop-wrap{max-width:1200px;margin:0 auto;display:flex;gap:0;padding:0 40px}
+  .sidebar-desktop{width:260px;flex-shrink:0;padding:20px 0 40px;position:sticky;top:100px;max-height:calc(100vh - 100px);overflow-y:auto;scrollbar-width:none;border-right:1px solid #1c1c1e}
   .sidebar-desktop::-webkit-scrollbar{display:none}
-  .sd-title{font-size:11px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:.8px;padding:0 20px;margin-bottom:12px}
-  .sd-card{background:#1c1c1e;border-radius:14px;overflow:hidden;cursor:pointer;margin:0 20px 10px;transition:transform .15s}
-  .sd-card:hover{transform:scale(1.02)}
-  .sd-img{width:100%;height:80px;object-fit:cover;display:block;background:#2c2c2e}
-  .sd-body{padding:8px 10px 10px}
-  .sd-tag{font-size:9px;font-weight:700;text-transform:uppercase;color:#ff6b35;letter-spacing:.5px;margin-bottom:2px}
-  .sd-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
+  .main-desktop{flex:1;min-width:0;padding:16px 0 40px 28px}
+  .sd-title{font-size:11px;font-weight:700;color:#ff6b35;text-transform:uppercase;letter-spacing:1px;padding:0 20px;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+  .sd-title::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(255,107,53,0.4),transparent)}
+  .sd-card{background:#1c1c1e;border-radius:14px;overflow:hidden;cursor:pointer;margin:0 20px 12px;transition:transform .15s,box-shadow .15s;border:1.5px solid rgba(255,107,53,0.25);box-shadow:0 4px 18px rgba(0,0,0,0.4)}
+  .sd-card:hover{transform:scale(1.03);border-color:#ff6b35;box-shadow:0 6px 24px rgba(255,107,53,0.25)}
+  .sd-img{width:100%;height:100px;object-fit:cover;display:block;background:#2c2c2e}
+  .sd-body{padding:8px 10px 10px;background:linear-gradient(to bottom,#1c1c1e,#161616)}
+  .sd-tag{font-size:9px;font-weight:700;text-transform:uppercase;color:#ff6b35;letter-spacing:.5px;margin-bottom:3px}
+  .sd-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;color:#fff}
   .sd-row{display:flex;align-items:center;justify-content:space-between}
-  .sd-price{font-size:13px;font-weight:900;color:#ff6b35}
-  .sd-disc{font-size:9px;font-weight:700;background:#ff6b35;color:#fff;border-radius:4px;padding:2px 5px}
+  .sd-price{font-size:15px;font-weight:900;color:#ff6b35}
+  .sd-disc{font-size:9px;font-weight:700;background:linear-gradient(135deg,#ff6b35,#ff3d00);color:#fff;border-radius:4px;padding:2px 6px;box-shadow:0 2px 6px rgba(255,61,0,0.4)}
 
-  /* Área principal */
-  .main-desktop{flex:1;min-width:0;padding:16px 40px 40px 24px}
-
-  /* Carrossel vira sidebar — some */
   .promo-carousel{display:none}
-
-  /* Grid 3 colunas */
   .grid{grid-template-columns:repeat(3,1fr);gap:14px;padding:0}
 
-  /* Modal centralizado */
   .overlay{align-items:center}
   .modal{border-radius:20px;max-width:520px;max-height:85vh}
-  .modal-img{height:260px;border-radius:20px 20px 0 0}
+  .modal-img{height:260px}
+  .modal-img-wrap{border-radius:20px 20px 0 0}
+
+  /* Desktop gallery: larger slide images */
+  .gallery-slide img{max-height:calc(100vh - 200px)}
+  .gallery-slide{padding:0 70px}
+  .gallery-arrow.prev{left:14px}
+  .gallery-arrow.next{right:14px}
 }
 
 @media(min-width:1100px){
@@ -137,11 +309,18 @@ header h1 span{color:#ff6b35}
       <input type="text" placeholder="Buscar produto..." id="search-input">
     </div>
   </div>
+  <div class="filter-bar" id="filter-bar">
+    <button class="filter-btn active" data-cat="Todas">Todas</button>
+    <button class="filter-btn" data-cat="Conjunto">Conjunto</button>
+    <button class="filter-btn" data-cat="Vestido">Vestido</button>
+    <button class="filter-btn" data-cat="Blusa">Blusa</button>
+    <button class="filter-btn" data-cat="Casual">Casual</button>
+  </div>
 </header>
 
 <!-- Carrossel de Promoções (mobile) -->
-<div class="promo-carousel">
-  <div class="promo-label">🔥 Promoções em destaque</div>
+<div class="promo-carousel" id="promo-carousel">
+  <div class="promo-label"><span class="promo-label-fire">🔥</span> Promoções em destaque</div>
   <div class="carousel-track" id="carousel-track"></div>
   <div class="promo-dots" id="promo-dots"></div>
 </div>
@@ -150,6 +329,7 @@ header h1 span{color:#ff6b35}
 <div class="desktop-wrap">
   <aside class="sidebar-desktop" id="sidebar-desktop" style="display:none"></aside>
   <div class="main-desktop">
+    <div class="section-label"> Nossa Coleção</div>
     <div class="grid" id="grid"></div>
   </div>
 </div>
@@ -158,7 +338,20 @@ header h1 span{color:#ff6b35}
 <div class="overlay" id="overlay">
   <div class="modal">
     <div class="modal-wrap">
-      <img class="modal-img" id="m-img" src="" alt="">
+      <div class="modal-img-wrap" id="modal-img-wrap">
+        <img class="modal-img" id="m-img" src="" alt="">
+        <div class="gallery-hint" id="gallery-hint">
+          <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Ver fotos
+        </div>
+        <div class="img-counter" id="modal-img-counter" style="display:none"></div>
+        <div class="modal-price-overlay">
+          <div class="modal-price-badge">
+            <span class="modal-price-value" id="m-price"></span>
+            <span class="modal-price-inst" id="m-inst"></span>
+          </div>
+        </div>
+      </div>
       <button class="close-btn" id="close-btn">✕</button>
     </div>
     <div class="modal-body">
@@ -168,80 +361,99 @@ header h1 span{color:#ff6b35}
       <div class="features" id="m-feats"></div>
       <div class="store-label">Escolha a loja</div>
       <div class="store-tabs" id="m-tabs"></div>
-      <div class="price-big" id="m-price"></div>
-      <div class="price-inst" id="m-inst"></div>
       <button class="btn-go" id="m-btn" onclick="if(this.dataset.href){fecharModal();window.location.href=this.dataset.href;}" data-href="#">Ver na loja</button>
     </div>
   </div>
 </div>
 
+<!-- GALERIA LIGHTBOX -->
+<div class="gallery-overlay" id="gallery-overlay">
+  <div class="gallery-counter" id="gallery-counter">1 / 1</div>
+  <button class="gallery-close" id="gallery-close">✕</button>
+
+  <div class="gallery-main" id="gallery-main">
+    <div class="gallery-slides" id="gallery-slides"></div>
+    <button class="gallery-arrow prev" id="gallery-prev">&#8249;</button>
+    <button class="gallery-arrow next" id="gallery-next">&#8250;</button>
+  </div>
+
+  <div class="gallery-thumbs" id="gallery-thumbs"></div>
+</div>
+
 <script>
 const produtos = [
   {
-    id:1, categoria:"Roupa",
+    id:1, categoria:"Blusa",
     nome:"Kit 5 Blusas Feminina",
-    descricao:" Fabricada com material principal de algodão, ela foi projetada pensando no bem-estar do seu corpo.",
+    descricao:"Fabricada com material principal de algodão, ela foi projetada pensando no bem-estar do seu corpo.",
     imagem:"img/Kit 5 Blusas.jpg",
+    galeria:["img/Kit 5 Blusas01.png","img/Kit 5 Blusas02.png"], 
     features:["Algodão","Lisa","Passeio"],
     lojas:[
-        {nome:"Shopee",preco:"R$ 78,66",parcelas:"12x de R$ 8,04",link:"https://s.shopee.com.br/5flSWgEUTF?share_channel_code=1"},
+      {nome:"Shopee",preco:"R$ 78,66",parcelas:"12x de R$ 8,04",link:"https://s.shopee.com.br/5flSWgEUTF?share_channel_code=1"},
     ]
   },
   {
-    id:2, categoria:"Roupa",
+    id:2, categoria:"Conjunto",
     nome:"Regata + Short",
     descricao:"Esse conjunto é a peça chave que faltava no seu guarda-roupa para você arrasar em qualquer ocasião, do almoço casual à balada inesquecível.",
     imagem:"img/Regata.jpg",
+    galeria:["img/Regata01.png","img/Regata02.png"],
     features:["Suplex","alfaiataria"],
     lojas:[
       {nome:"Shopee",preco:"R$ 49,90",parcelas:"9x de R$ 6,31",link:"https://s.shopee.com.br/30khMfXDtB"},
     ]
   },
   {
-    id:3, categoria:"Roupa",
+    id:3, categoria:"Vestido",
     nome:"Vestido feminino",
     descricao:"Perfeito para qualquer ocasião. Você pode usar em festas, jantar ou chás de revelação, é só combinar com aquela sandália bafônica!",
     imagem:"img/Vestido.png",
+    galeria:["img/Vestido01.png","img/Vestido02.png"],
     features:["Manga Curta","Casual","Verão e inverno"],
     lojas:[
       {nome:"Shopee",preco:"R$ 53,35",parcelas:"10x de R$ 6,12",link:"https://s.shopee.com.br/5VS2LznSMX"},
     ]
   },
   {
-    id:4, categoria:"Roupa",
+    id:4, categoria:"Casual",
     nome:"Cropped Regata",
     descricao:"Garanta o look perfeito para torcer com estilo e conforto! Nosso Kit com 3 Croppeds Regata do Brasil une a tendência da moda casual com o orgulho de vestir as cores da nossa bandeira.",
     imagem:"img/Brasil.jpg",
+    galeria:["img/Brasil01.png","img/Brasil02.png"],
     features:["Lisa","Verão"],
     lojas:[
       {nome:"Shopee",preco:"R$ 31,98",parcelas:"6x de R$ 5,96",link:"https://s.shopee.com.br/1VvtibJC5p"},
     ]
   },
   {
-    id:5, categoria:"Roupa",
+    id:5, categoria:"Casual",
     nome:"Pijama Virginia",
     descricao:"Pijama confortável e estiloso, perfeito para noites de descanso com muito conforto e charme.",
     imagem:"img/Promo01.jpg",
+    galeria:["img/Promo01.jpg"],
     features:["Confortável","Macio","Dormir"],
     lojas:[
       {nome:"Shopee",preco:"R$ 21,67",parcelas:"",link:"https://s.shopee.com.br/4fsvUTE6gU"},
     ]
   },
   {
-    id:6, categoria:"Roupa",
+    id:6, categoria:"Conjunto",
     nome:"Kit Short Canelado",
     descricao:"Kit de shorts canelados, combinação perfeita de estilo e conforto para o dia a dia.",
     imagem:"img/Promo02.jpg",
+    galeria:["img/Promo02.jpg"],
     features:["Canelado","Casual","Verão"],
     lojas:[
       {nome:"Shopee",preco:"R$ 23,49",parcelas:"",link:"https://s.shopee.com.br/30khVbc9YK"},
     ]
   },
   {
-    id:7, categoria:"Roupa",
+    id:7, categoria:"Blusa",
     nome:"Kit 10 Blusa Feminina",
     descricao:"Kit com 10 blusas femininas variadas, ideal para renovar o guarda-roupa com praticidade e economia.",
     imagem:"img/Promo03.jpg",
+    galeria:["img/Promo03.jpg"],
     features:["Algodão","Lisa","Passeio"],
     lojas:[
       {nome:"Shopee",preco:"R$ 59,98",parcelas:"",link:"https://s.shopee.com.br/175w8Cc7Y"},
@@ -251,20 +463,28 @@ const produtos = [
 
 let lojaAtiva = {};
 
+/* ═══════════ MODAL ═══════════ */
 function abrirModal(p) {
   lojaAtiva[p.id] = lojaAtiva[p.id] || 0;
+
+  const imgWrap = document.getElementById('modal-img-wrap');
+  const hint = document.getElementById('gallery-hint');
+  const counter = document.getElementById('modal-img-counter');
+
   document.getElementById('m-img').src = p.imagem;
   document.getElementById('m-badge').textContent = p.categoria;
   document.getElementById('m-name').textContent = p.nome;
   document.getElementById('m-desc').textContent = p.descricao;
+
   const feats = document.getElementById('m-feats');
   feats.innerHTML = p.features.map(f=>`<span class="feat">✓ ${f}</span>`).join('');
+
   const tabs = document.getElementById('m-tabs');
   tabs.innerHTML = '';
   p.lojas.forEach((l,i)=>{
     const t = document.createElement('button');
     t.className = 'stab' + (i===lojaAtiva[p.id]?' active':'');
-    t.innerHTML = `<span class="sname">${l.nome}</span><span class="sprice">${l.preco}</span>`;
+    t.innerHTML = `<span class="sname">${l.nome}</span>`;
     t.onclick = ()=>{
       lojaAtiva[p.id]=i;
       tabs.querySelectorAll('.stab').forEach((s,j)=>s.classList.toggle('active',j===i));
@@ -273,6 +493,21 @@ function abrirModal(p) {
     tabs.appendChild(t);
   });
   atualizarPreco(p, lojaAtiva[p.id]);
+
+  // Galeria: mostrar hint/contador
+  const imgs = p.galeria && p.galeria.length ? p.galeria : [p.imagem];
+  if(imgs.length > 1){
+    hint.style.display = 'none';
+    counter.style.display = 'block';
+    counter.textContent = `1 / ${imgs.length}`;
+  } else {
+    hint.style.display = 'flex';
+    counter.style.display = 'none';
+  }
+
+  // Click na imagem abre galeria
+  imgWrap.onclick = () => abrirGaleria(p);
+
   document.getElementById('overlay').classList.add('open');
 }
 
@@ -289,9 +524,169 @@ document.getElementById('close-btn').onclick=fecharModal;
 document.getElementById('overlay').onclick=e=>{if(e.target===document.getElementById('overlay'))fecharModal()};
 function fecharModal(){document.getElementById('overlay').classList.remove('open');}
 
+/* ═══════════ GALERIA LIGHTBOX ═══════════ */
+let galAtual = 0;
+let galImagens = [];
+let touchStartX = 0;
+let touchStartY = 0;
+let isDragging = false;
+let dragStartX = 0;
+let dragOffset = 0;
+
+function abrirGaleria(p){
+  galImagens = p.galeria && p.galeria.length ? p.galeria : [p.imagem];
+  galAtual = 0;
+
+  // Render slides
+  const slidesEl = document.getElementById('gallery-slides');
+  slidesEl.innerHTML = '';
+  galImagens.forEach((src, i) => {
+    const slide = document.createElement('div');
+    slide.className = 'gallery-slide';
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = `Foto ${i+1}`;
+    img.draggable = false;
+    slide.appendChild(img);
+    slidesEl.appendChild(slide);
+  });
+
+  // Render thumbs
+  const thumbsEl = document.getElementById('gallery-thumbs');
+  thumbsEl.innerHTML = '';
+  galImagens.forEach((src, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'gallery-thumb' + (i===0?' active':'');
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = `Miniatura ${i+1}`;
+    thumb.appendChild(img);
+    thumb.onclick = () => irParaSlide(i);
+    thumbsEl.appendChild(thumb);
+  });
+
+  atualizarGaleria();
+  document.getElementById('gallery-overlay').classList.add('open');
+}
+
+function atualizarGaleria(){
+  const total = galImagens.length;
+  document.getElementById('gallery-counter').textContent = `${galAtual+1} / ${total}`;
+  document.getElementById('gallery-slides').style.transform = `translateX(-${galAtual * 100}%)`;
+
+  // Arrows
+  document.getElementById('gallery-prev').classList.toggle('hidden', galAtual === 0);
+  document.getElementById('gallery-next').classList.toggle('hidden', galAtual === total-1);
+
+  // Thumbs
+  document.querySelectorAll('.gallery-thumb').forEach((t,i)=>{
+    t.classList.toggle('active', i === galAtual);
+  });
+
+  // Scroll thumb into view
+  const thumbsEl = document.getElementById('gallery-thumbs');
+  const activeThumb = thumbsEl.children[galAtual];
+  if(activeThumb) activeThumb.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+
+function irParaSlide(index){
+  galAtual = Math.max(0, Math.min(index, galImagens.length-1));
+  atualizarGaleria();
+}
+
+document.getElementById('gallery-prev').onclick = () => irParaSlide(galAtual - 1);
+document.getElementById('gallery-next').onclick = () => irParaSlide(galAtual + 1);
+
+document.getElementById('gallery-close').onclick = fecharGaleria;
+document.getElementById('gallery-overlay').onclick = e => {
+  if(e.target === document.getElementById('gallery-overlay')) fecharGaleria();
+};
+function fecharGaleria(){ document.getElementById('gallery-overlay').classList.remove('open'); }
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if(!document.getElementById('gallery-overlay').classList.contains('open')) return;
+  if(e.key === 'ArrowLeft') irParaSlide(galAtual - 1);
+  if(e.key === 'ArrowRight') irParaSlide(galAtual + 1);
+  if(e.key === 'Escape') fecharGaleria();
+});
+
+// Touch/swipe support
+const galleryMain = document.getElementById('gallery-main');
+
+galleryMain.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  isDragging = false;
+}, {passive:true});
+
+galleryMain.addEventListener('touchmove', e => {
+  const dx = e.touches[0].clientX - touchStartX;
+  const dy = e.touches[0].clientY - touchStartY;
+  if(!isDragging && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8){
+    isDragging = true;
+  }
+  if(isDragging){
+    // Live drag feedback
+    const pct = (dx / window.innerWidth) * 100;
+    document.getElementById('gallery-slides').style.transform =
+      `translateX(calc(-${galAtual * 100}% + ${dx}px))`;
+  }
+}, {passive:true});
+
+galleryMain.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if(isDragging){
+    if(dx < -50) irParaSlide(galAtual + 1);
+    else if(dx > 50) irParaSlide(galAtual - 1);
+    else atualizarGaleria(); // snap back
+  }
+  isDragging = false;
+}, {passive:true});
+
+// Mouse drag (desktop)
+galleryMain.addEventListener('mousedown', e => {
+  dragStartX = e.clientX;
+  isDragging = true;
+  e.preventDefault();
+});
+document.addEventListener('mousemove', e => {
+  if(!isDragging) return;
+  const dx = e.clientX - dragStartX;
+  document.getElementById('gallery-slides').style.transform =
+    `translateX(calc(-${galAtual * 100}% + ${dx}px))`;
+});
+document.addEventListener('mouseup', e => {
+  if(!isDragging) return;
+  const dx = e.clientX - dragStartX;
+  if(dx < -60) irParaSlide(galAtual + 1);
+  else if(dx > 60) irParaSlide(galAtual - 1);
+  else atualizarGaleria();
+  isDragging = false;
+});
+
+/* ═══════════ GRID ═══════════ */
+let filtroAtivo = 'Todas';
+
+function getProdutosBase(){
+  return produtos.filter(p=>!promocoes.some(pr=>pr.produtoId===p.id));
+}
+
+function aplicarFiltros(){
+  const q = document.getElementById('search-input').value.toLowerCase();
+  let lista = getProdutosBase();
+  if(filtroAtivo !== 'Todas') lista = lista.filter(p => p.categoria === filtroAtivo);
+  if(q) lista = lista.filter(p => p.nome.toLowerCase().includes(q) || p.categoria.toLowerCase().includes(q));
+  renderGrid(lista);
+}
+
 function renderGrid(lista){
   const g=document.getElementById('grid');
   g.innerHTML='';
+  if(lista.length === 0){
+    g.innerHTML=`<div class="empty-state"><span>🔍</span>Nenhum produto encontrado</div>`;
+    return;
+  }
   lista.forEach(p=>{
     const c=document.createElement('div');
     c.className='card';
@@ -310,54 +705,141 @@ function renderGrid(lista){
   });
 }
 
-document.getElementById('search-input').oninput=function(){
-  const q=this.value.toLowerCase();
-  const base=produtos.filter(p=>!promocoes.some(pr=>pr.produtoId===p.id));
-  renderGrid(q?base.filter(p=>p.nome.toLowerCase().includes(q)||p.categoria.toLowerCase().includes(q)):base);
+// Filtros
+document.getElementById('filter-bar').addEventListener('click', e => {
+  const btn = e.target.closest('.filter-btn');
+  if(!btn) return;
+  filtroAtivo = btn.dataset.cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+  aplicarFiltros();
+});
+
+document.getElementById('search-input').oninput = aplicarFiltros;
+
+/* ═══════════ CARROSSEL ═══════════ */
+const promocoes = [
+  {titulo:"PIJAMA VIRGINIA",tag:"Roupa",preco:"R$ 21,67",precoOriginal:"R$ 39,90",desconto:"-46%",imagem:"img/Promo01.jpg",produtoId:5, duracao: 6 * 60 * 60},
+  {titulo:"Kit Short Canelado",tag:"Roupa",preco:"R$ 23,99",precoOriginal:"R$ 80,00",desconto:"-70%",imagem:"img/Promo02.jpg",produtoId:6, duracao: 24 * 60 * 60},
+  {titulo:"Kit 10 Blusa Feminina",tag:"Roupa",preco:"R$ 58,99",precoOriginal:"R$ 100,00",desconto:"-41%",imagem:"img/Promo03.jpg",produtoId:7, duracao: 6 * 60 * 60},
+];
+
+// ═══════════ FIREBASE TIMER ═══════════
+// Substitua com as suas credenciais do Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyChe4rWJphoPw4VQ1YM3OX72UmTvRKI2FE",
+  authDomain: "tela-login-5062e.firebaseapp.com",
+  databaseURL: "https://tela-login-5062e-default-rtdb.firebaseio.com",
+  projectId: "tela-login-5062e",
+  storageBucket: "tela-login-5062e.firebasestorage.app",
+  messagingSenderId: "685048984991",
+  appId: "1:685048984991:web:dd6fcf2ecc92af1bbef9aa"
 };
 
-// CARROSSEL
-const promocoes = [
-  {titulo:" PIJAMA VIRGINIA",tag:"Roupa",preco:"R$ 21,67",desconto:"-46%",imagem:"img/Promo01.jpg",produtoId:5},
-  {titulo:"kit short canelado",tag:"Roupa",preco:"R$ 23,49",desconto:"-71%",imagem:"img/Promo02.jpg",produtoId:6},
-  {titulo:"Kit 10 Blusa Feminina",tag:"Roupa",preco:"R$ 59,98",desconto:"-40%",imagem:"img/Promo03.jpg",produtoId:7},
-];
+let endTimes = [];
+
+async function inicializarTimers() {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    for (let i = 0; i < promocoes.length; i++) {
+      const snap = await db.ref(`timers/promo_${i}`).get();
+      if (snap.exists()) {
+        endTimes[i] = snap.val();
+      } else {
+        const endTime = Date.now() + promocoes[i].duracao * 1000;
+        await db.ref(`timers/promo_${i}`).set(endTime);
+        endTimes[i] = endTime;
+      }
+    }
+  } catch(e) {
+    // Firebase falhou — usa sessionStorage como fallback
+    console.warn('Firebase indisponível, usando timer local.', e);
+    const start = Date.now();
+    promocoes.forEach((promo, i) => {
+      endTimes[i] = start + promo.duracao * 1000;
+    });
+  }
+  renderCarousel();
+  renderSidebarDesktop();
+  document.getElementById('promo-carousel').style.display = '';
+}
+
+function getTempoRestante(index) {
+  const endTime = endTimes[index] || 0;
+  return Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+}
+
+window.resetTimer = async function(index) {
+  const db = firebase.database();
+  const endTime = Date.now() + promocoes[index].duracao * 1000;
+  await db.ref(`timers/promo_${index}`).set(endTime);
+  endTimes[index] = endTime;
+  console.log(`Timer ${index} resetado!`);
+}
+
+
+function formatarTempo(segundos) {
+  if (segundos <= 0) return null;
+  const h = Math.floor(segundos / 3600);
+  const m = Math.floor((segundos % 3600) / 60);
+  const s = segundos % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
 
 function renderCarousel(){
   const track = document.getElementById('carousel-track');
   const dots  = document.getElementById('promo-dots');
   track.innerHTML='';
   dots.innerHTML='';
-
   promocoes.forEach((promo, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'promo-card-wrap';
     const card = document.createElement('div');
     card.className = 'promo-card';
+    const tempoRestante = getTempoRestante(i);
+    const expirado = tempoRestante <= 0;
+    const tempoFormatado = formatarTempo(tempoRestante);
     card.innerHTML = `
-      <img class="promo-card-img" src="${promo.imagem}" alt="${promo.titulo}" loading="lazy">
+      <div style="position:relative">
+        <img class="promo-card-img" src="${promo.imagem}" alt="${promo.titulo}" loading="lazy" style="${expirado?'filter:grayscale(55%) opacity(0.65)':''}">
+        <div class="promo-img-overlay"></div>
+        <div class="promo-img-footer">
+          <div class="promo-title-over">${promo.titulo}</div>
+          <span class="promo-badge-desc">${promo.desconto}</span>
+        </div>
+      </div>
       <div class="promo-card-body">
         <div class="promo-tag">${promo.tag}</div>
-        <div class="promo-title">${promo.titulo}</div>
-        <div class="promo-row">
+        <div class="promo-prices-row">
           <span class="promo-price">${promo.preco}</span>
-          <span class="promo-discount">${promo.desconto}</span>
+          <span class="promo-original">${promo.precoOriginal}</span>
+        </div>
+        <div class="promo-card-footer">
+          ${expirado
+            ? `<div class="promo-expired-alert">&#9888; Promoção pode não estar disponível</div>`
+            : `<div class="promo-timer" id="ptimer-${i}">&#9201; ${tempoFormatado}</div>`
+          }
         </div>
       </div>`;
     card.onclick = () => {
       const p = produtos.find(x => x.id === promo.produtoId);
       if(p) abrirModal(p);
     };
-    track.appendChild(card);
-
+    wrap.appendChild(card);
+    track.appendChild(wrap);
     const dot = document.createElement('span');
     if(i===0) dot.classList.add('active');
     dots.appendChild(dot);
   });
-
-  const allCards = track.querySelectorAll('.promo-card');
+  const allCards = track.querySelectorAll('.promo-card-wrap');
   const allDots  = dots.querySelectorAll('span');
   let userScrolled = false;
   track.addEventListener('scroll', () => { userScrolled = true; }, { once: true });
+  // Destaque inicial no primeiro card
+  if(allCards.length) allCards[0].classList.add('focused');
+
   const visibilityMap = new Map();
+  let scrollTimer = null;
   const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => { visibilityMap.set(entry.target, entry.intersectionRatio); });
     if(!userScrolled) return;
@@ -367,26 +849,55 @@ function renderCarousel(){
       if(ratio > bestRatio){ bestRatio = ratio; bestIdx = i; }
     });
     allDots.forEach((d,j) => d.classList.toggle('active', j===bestIdx));
+    // Aplica destaque após parar de rolar
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(() => {
+      allCards.forEach((card, j) => card.classList.toggle('focused', j===bestIdx));
+    }, 50);
   }, { root: track, threshold: [0, 0.25, 0.5, 0.75, 1] });
   allCards.forEach(c => observer.observe(c));
+
+  // Tick dos timers a cada segundo
+  setInterval(() => {
+    promocoes.forEach((promo, i) => {
+      const el = document.getElementById(`ptimer-${i}`);
+      if (!el) return;
+      const restante = getTempoRestante(i);
+      if (restante <= 0) {
+        el.outerHTML = `<div class="promo-expired-alert">&#9888; Talvez essa promoção não esteja mais disponível</div>`;
+      } else {
+        el.textContent = `\u23F1 ${formatarTempo(restante)}`;
+      }
+    });
+  }, 1000);
 }
 
-// SIDEBAR DESKTOP
+/* ═══════════ SIDEBAR DESKTOP ═══════════ */
 function renderSidebarDesktop(){
   const sidebar = document.getElementById('sidebar-desktop');
   sidebar.innerHTML = `<div class="sd-title">🔥 Promoções em destaque</div>`;
-  promocoes.forEach(promo => {
+  promocoes.forEach((promo, i) => {
     const card = document.createElement('div');
     card.className = 'sd-card';
+    const tempoRestante = getTempoRestante(i);
+    const expirado = tempoRestante <= 0;
+    const tempoFormatado = formatarTempo(tempoRestante);
     card.innerHTML = `
-      <img class="sd-img" src="${promo.imagem}" alt="${promo.titulo}" loading="lazy">
+      <div style="position:relative">
+        <img class="sd-img" src="${promo.imagem}" alt="${promo.titulo}" loading="lazy" style="${expirado?'filter:grayscale(60%) opacity(0.7)':''}">
+        <span style="position:absolute;top:6px;left:6px;font-size:9px;font-weight:800;background:#ff6b35;color:#fff;border-radius:5px;padding:2px 6px">${promo.desconto}</span>
+      </div>
       <div class="sd-body">
         <div class="sd-tag">${promo.tag}</div>
         <div class="sd-name">${promo.titulo}</div>
         <div class="sd-row">
           <span class="sd-price">${promo.preco}</span>
-          <span class="sd-disc">${promo.desconto}</span>
+          <span style="font-size:11px;color:#888;text-decoration:line-through;font-weight:500">${promo.precoOriginal}</span>
         </div>
+        ${expirado
+          ? `<div style="font-size:9px;color:#f5a623;margin-top:5px;line-height:1.3">⚠️ Pode não estar disponível</div>`
+          : `<div style="font-size:9px;color:#ff6b35;font-weight:700;margin-top:5px" id="sdtimer-${i}">⏱ ${tempoFormatado}</div>`
+        }
       </div>`;
     card.onclick = () => {
       const p = produtos.find(x => x.id === promo.produtoId);
@@ -403,13 +914,25 @@ function checkDesktop(){
 window.matchMedia('(min-width:860px)').addEventListener('change', checkDesktop);
 checkDesktop();
 
-renderCarousel();
-renderSidebarDesktop();
-renderGrid(produtos.filter(p=>!promocoes.some(pr=>pr.produtoId===p.id)));
+inicializarTimers();
+
+// Tick dos timers na sidebar desktop
+setInterval(() => {
+  promocoes.forEach((promo, i) => {
+    const el = document.getElementById(`sdtimer-${i}`);
+    if (!el) return;
+    const restante = getTempoRestante(i);
+    if (restante <= 0) {
+      el.outerHTML = `<div style="font-size:9px;color:#f5a623;margin-top:5px;line-height:1.3">⚠️ Pode não estar disponível</div>`;
+    } else {
+      el.textContent = `⏱ ${formatarTempo(restante)}`;
+    }
+  });
+}, 1000);
+renderGrid(getProdutosBase());
 window.scrollTo(0, 0);
 
-// Fecha o modal quando o usuário volta pra página (botão voltar do Chrome)
-window.addEventListener('pageshow', function() { fecharModal(); });
+window.addEventListener('pageshow', function() { fecharModal(); fecharGaleria(); });
 window.addEventListener('focus', function() { fecharModal(); });
 document.addEventListener('visibilitychange', function() {
   if(document.visibilityState === 'visible') fecharModal();
