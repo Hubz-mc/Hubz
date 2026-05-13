@@ -9,7 +9,8 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;scrollbar-width:none;-webkit-tap-highlight-color:transparent}
 *::-webkit-scrollbar{display:none}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f0f;color:#fff;max-width:480px;margin:0 auto;min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f0f;color:#fff;min-height:100vh}
+@media(max-width:859px){body{max-width:480px;margin:0 auto}}
 
 header{padding:20px 16px 0;background:#0f0f0f;position:sticky;top:0;z-index:10}
 .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -21,7 +22,8 @@ header h1 span{color:#ff6b35}
 
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 16px 40px}
 
-.card{background:#1c1c1e;border-radius:16px;overflow:hidden;cursor:pointer;transition:transform 0.15s;position:relative}
+.card{background:#1c1c1e;border-radius:16px;overflow:hidden;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;position:relative;animation:popIn 0.4s cubic-bezier(0.34,1.2,0.64,1) both}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.4)}
 .card:active{transform:scale(0.97)}
 
 .card-img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:#2c2c2e}
@@ -48,11 +50,13 @@ header h1 span{color:#ff6b35}
 /* Card principal */
 .promo-card-wrap{
   flex:0 0 250px;
-  border-radius:18px;
+  border-radius:16px;
   scroll-snap-align:start;
   border:2px solid transparent;
   transition:border-color 0.6s, transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
   animation:cardEntrance 0.5s ease both;
+  overflow:hidden;
+  background:#161616;
 }
 .promo-card-wrap:nth-child(2){animation-delay:0.1s}
 .promo-card-wrap:nth-child(3){animation-delay:0.2s}
@@ -68,31 +72,32 @@ header h1 span{color:#ff6b35}
   background:#161616;
   box-shadow:0 10px 36px rgba(0,0,0,0.6);
   transition:transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+  font-size:0;
 }
 @keyframes cardEntrance{
   from{opacity:0;transform:translateY(18px) scale(0.95)}
   to{opacity:1;transform:translateY(0) scale(1)}
 }
-.promo-card:active{transform:scale(0.96)}
+.promo-card:active{opacity:0.85}
 .promo-card:hover{box-shadow:0 10px 40px rgba(0,0,0,0.7)}
-.promo-card.focused .promo-card-img{transform:scale(1.02);transition:transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94)}
+.promo-card.focused .promo-card-img{transform:none}
 
 /* Imagem */
-.promo-card-img{width:100%;height:130px;object-fit:cover;display:block;transition:transform 0.4s}
-.promo-card:hover .promo-card-img{transform:scale(1.05)}
-.promo-img-overlay{position:absolute;top:0;left:0;right:0;height:130px;background:linear-gradient(to bottom,rgba(0,0,0,0.05) 30%,rgba(0,0,0,0.82) 100%);pointer-events:none}
+.promo-card-img{width:100%;height:155px;object-fit:cover;display:block}
+.promo-card:hover .promo-card-img{transform:none}
+.promo-img-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(to bottom,rgba(0,0,0,0.05) 30%,rgba(0,0,0,0.82) 100%);pointer-events:none}
 
 /* Título + badge sobre a imagem */
-.promo-img-footer{position:absolute;top:92px;left:0;right:0;padding:0 13px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.promo-img-footer{position:absolute;bottom:8px;left:0;right:0;padding:0 13px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
 .promo-title-over{font-size:14px;font-weight:800;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,0.7);line-height:1.2;flex:1}
 
 /* Badge de desconto */
 .promo-badge-desc{
   flex-shrink:0;
-  font-size:13px;font-weight:900;
+  font-size:15px;font-weight:900;
   background:linear-gradient(135deg,#ff6b35,#ff3d00);
   color:#fff;border-radius:10px;
-  padding:5px 11px;
+  padding:9px 13px;
   letter-spacing:0.3px;
   box-shadow:0 3px 12px rgba(255,61,0,0.55);
   animation:glow 2s ease-in-out infinite;
@@ -103,16 +108,16 @@ header h1 span{color:#ff6b35}
 }
 
 /* Corpo */
-.promo-card-body{padding:8px 11px 10px;background:#161616}
+.promo-card-body{padding:8px 11px 10px;background:#161616;font-size:initial}
 .promo-tag{font-size:8px;font-weight:800;text-transform:uppercase;color:#ff6b35;letter-spacing:1px;margin-bottom:4px}
 
 /* Preços */
 .promo-prices-row{display:flex;align-items:baseline;gap:6px;margin-bottom:8px}
 .promo-price{font-size:18px;font-weight:900;color:#fff;letter-spacing:-0.5px}
-.promo-original{font-size:11px;color:#444;text-decoration:line-through;font-weight:500}
+.promo-original{font-size:11px;color:#777;text-decoration:line-through;font-weight:500}
 
 /* Rodapé do card: timer + botão lado a lado */
-.promo-card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.promo-card-footer{display:flex;align-items:center;justify-content:flex-start;gap:8px}
 
 /* Timer */
 .promo-timer{
@@ -165,8 +170,37 @@ header h1 span{color:#ff6b35}
 /* Mensagem empty state */
 .empty-state{grid-column:1/-1;text-align:center;padding:40px 20px;color:#444;font-size:14px}
 .empty-state span{font-size:28px;display:block;margin-bottom:8px}
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;align-items:flex-end;justify-content:center}
-.overlay.open{display:flex}
+/* ═══ ANIMAÇÕES ═══ */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes modalEnter{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes zoomIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}
+@keyframes popIn{from{opacity:0;transform:scale(0.85) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+.overlay{
+  display:flex;
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.75);
+  z-index:100;
+  align-items:flex-end;
+  justify-content:center;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity 0.25s ease, visibility 0.25s ease;
+}
+.overlay.open{
+  opacity:1;
+  visibility:visible;
+  pointer-events:all;
+}
+.overlay .modal{
+  transform:translateY(100%);
+  transition:transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+.overlay.open .modal{
+  transform:translateY(0);
+}
 .modal{background:#1c1c1e;border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding-bottom:32px}
 
 /* Modal image with gallery hint */
@@ -219,8 +253,26 @@ header h1 span{color:#ff6b35}
 /* ═══════════════════════════════════
    GALERIA LIGHTBOX
 ═══════════════════════════════════ */
-.gallery-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:200;flex-direction:column;align-items:center;justify-content:center}
-.gallery-overlay.open{display:flex}
+.gallery-overlay{
+  display:flex;
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.95);
+  z-index:200;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity 0.25s ease, visibility 0.25s ease;
+}
+.gallery-overlay.open{
+  opacity:1;
+  visibility:visible;
+  pointer-events:all;
+}
+.gallery-overlay.open .gallery-main{animation:zoomIn 0.35s cubic-bezier(0.34,1.2,0.64,1) forwards}
+.gallery-overlay.open .gallery-thumbs{animation:slideDown 0.4s ease forwards}
 
 .gallery-close{position:absolute;top:16px;right:16px;width:40px;height:40px;background:rgba(255,255,255,0.1);border:none;border-radius:50%;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);z-index:3;transition:background 0.15s}
 .gallery-close:hover{background:rgba(255,255,255,0.2)}
@@ -321,7 +373,7 @@ header h1 span{color:#ff6b35}
 <!-- Carrossel de Promoções (mobile) -->
 <div class="promo-carousel" id="promo-carousel">
   <div class="promo-label"><span class="promo-label-fire">🔥</span> Promoções em destaque</div>
-  <div class="carousel-track" id="carousel-track"></div>
+  <div class="carousel-track" id="carousel-track" style="display:none"></div>
   <div class="promo-dots" id="promo-dots"></div>
 </div>
 
@@ -481,17 +533,25 @@ function abrirModal(p) {
 
   const tabs = document.getElementById('m-tabs');
   tabs.innerHTML = '';
-  p.lojas.forEach((l,i)=>{
-    const t = document.createElement('button');
-    t.className = 'stab' + (i===lojaAtiva[p.id]?' active':'');
-    t.innerHTML = `<span class="sname">${l.nome}</span>`;
-    t.onclick = ()=>{
-      lojaAtiva[p.id]=i;
-      tabs.querySelectorAll('.stab').forEach((s,j)=>s.classList.toggle('active',j===i));
-      atualizarPreco(p,i);
-    };
-    tabs.appendChild(t);
-  });
+  const storeLabel = document.querySelector('.store-label');
+  if(p.lojas.length <= 1){
+    storeLabel.style.display = 'none';
+    tabs.style.display = 'none';
+  } else {
+    storeLabel.style.display = '';
+    tabs.style.display = '';
+    p.lojas.forEach((l,i)=>{
+      const t = document.createElement('button');
+      t.className = 'stab' + (i===lojaAtiva[p.id]?' active':'');
+      t.innerHTML = `<span class="sname">${l.nome}</span>`;
+      t.onclick = ()=>{
+        lojaAtiva[p.id]=i;
+        tabs.querySelectorAll('.stab').forEach((s,j)=>s.classList.toggle('active',j===i));
+        atualizarPreco(p,i);
+      };
+      tabs.appendChild(t);
+    });
+  }
   atualizarPreco(p, lojaAtiva[p.id]);
 
   // Galeria: mostrar hint/contador
@@ -509,6 +569,9 @@ function abrirModal(p) {
   imgWrap.onclick = () => abrirGaleria(p);
 
   document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.body.style.position = 'fixed';
+  document.body.style.width = '100%';
 }
 
 function atualizarPreco(p,i){
@@ -522,14 +585,20 @@ function atualizarPreco(p,i){
 
 document.getElementById('close-btn').onclick=fecharModal;
 document.getElementById('overlay').onclick=e=>{if(e.target===document.getElementById('overlay'))fecharModal()};
-function fecharModal(){document.getElementById('overlay').classList.remove('open');}
+function fecharModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.width = '';
+}
 
 /* ═══════════ GALERIA LIGHTBOX ═══════════ */
 let galAtual = 0;
 let galImagens = [];
 let touchStartX = 0;
 let touchStartY = 0;
-let isDragging = false;
+let isTouchDragging = false;
+let isMouseDragging = false;
 let dragStartX = 0;
 let dragOffset = 0;
 
@@ -567,6 +636,9 @@ function abrirGaleria(p){
 
   atualizarGaleria();
   document.getElementById('gallery-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.body.style.position = 'fixed';
+  document.body.style.width = '100%';
 }
 
 function atualizarGaleria(){
@@ -601,7 +673,12 @@ document.getElementById('gallery-close').onclick = fecharGaleria;
 document.getElementById('gallery-overlay').onclick = e => {
   if(e.target === document.getElementById('gallery-overlay')) fecharGaleria();
 };
-function fecharGaleria(){ document.getElementById('gallery-overlay').classList.remove('open'); }
+function fecharGaleria(){ 
+  document.getElementById('gallery-overlay').classList.remove('open'); 
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.width = '';
+}
 
 // Keyboard navigation
 document.addEventListener('keydown', e => {
@@ -617,18 +694,16 @@ const galleryMain = document.getElementById('gallery-main');
 galleryMain.addEventListener('touchstart', e => {
   touchStartX = e.touches[0].clientX;
   touchStartY = e.touches[0].clientY;
-  isDragging = false;
+  isTouchDragging = false;
 }, {passive:true});
 
 galleryMain.addEventListener('touchmove', e => {
   const dx = e.touches[0].clientX - touchStartX;
   const dy = e.touches[0].clientY - touchStartY;
-  if(!isDragging && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8){
-    isDragging = true;
+  if(!isTouchDragging && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8){
+    isTouchDragging = true;
   }
-  if(isDragging){
-    // Live drag feedback
-    const pct = (dx / window.innerWidth) * 100;
+  if(isTouchDragging){
     document.getElementById('gallery-slides').style.transform =
       `translateX(calc(-${galAtual * 100}% + ${dx}px))`;
   }
@@ -636,33 +711,33 @@ galleryMain.addEventListener('touchmove', e => {
 
 galleryMain.addEventListener('touchend', e => {
   const dx = e.changedTouches[0].clientX - touchStartX;
-  if(isDragging){
+  if(isTouchDragging){
     if(dx < -50) irParaSlide(galAtual + 1);
     else if(dx > 50) irParaSlide(galAtual - 1);
-    else atualizarGaleria(); // snap back
+    else atualizarGaleria();
   }
-  isDragging = false;
+  isTouchDragging = false;
 }, {passive:true});
 
 // Mouse drag (desktop)
 galleryMain.addEventListener('mousedown', e => {
   dragStartX = e.clientX;
-  isDragging = true;
+  isMouseDragging = true;
   e.preventDefault();
 });
 document.addEventListener('mousemove', e => {
-  if(!isDragging) return;
+  if(!isMouseDragging) return;
   const dx = e.clientX - dragStartX;
   document.getElementById('gallery-slides').style.transform =
     `translateX(calc(-${galAtual * 100}% + ${dx}px))`;
 });
 document.addEventListener('mouseup', e => {
-  if(!isDragging) return;
+  if(!isMouseDragging) return;
   const dx = e.clientX - dragStartX;
   if(dx < -60) irParaSlide(galAtual + 1);
   else if(dx > 60) irParaSlide(galAtual - 1);
   else atualizarGaleria();
-  isDragging = false;
+  isMouseDragging = false;
 });
 
 /* ═══════════ GRID ═══════════ */
@@ -687,9 +762,10 @@ function renderGrid(lista){
     g.innerHTML=`<div class="empty-state"><span>🔍</span>Nenhum produto encontrado</div>`;
     return;
   }
-  lista.forEach(p=>{
+  lista.forEach((p, idx)=>{
     const c=document.createElement('div');
     c.className='card';
+    c.style.animationDelay = `${idx * 0.07}s`;
     c.innerHTML=`
       <img class="card-img" src="${p.imagem}" alt="${p.nome}" loading="lazy">
       <span class="badge">${p.categoria}</span>
@@ -761,6 +837,7 @@ async function inicializarTimers() {
   }
   renderCarousel();
   renderSidebarDesktop();
+  document.getElementById('carousel-track').style.display = '';
   document.getElementById('promo-carousel').style.display = '';
 }
 
@@ -800,7 +877,7 @@ function renderCarousel(){
     const expirado = tempoRestante <= 0;
     const tempoFormatado = formatarTempo(tempoRestante);
     card.innerHTML = `
-      <div style="position:relative">
+      <div style="position:relative;line-height:0;font-size:0">
         <img class="promo-card-img" src="${promo.imagem}" alt="${promo.titulo}" loading="lazy" style="${expirado?'filter:grayscale(55%) opacity(0.65)':''}">
         <div class="promo-img-overlay"></div>
         <div class="promo-img-footer">
@@ -883,7 +960,7 @@ function renderSidebarDesktop(){
     const expirado = tempoRestante <= 0;
     const tempoFormatado = formatarTempo(tempoRestante);
     card.innerHTML = `
-      <div style="position:relative">
+      <div style="position:relative;line-height:0;font-size:0">
         <img class="sd-img" src="${promo.imagem}" alt="${promo.titulo}" loading="lazy" style="${expirado?'filter:grayscale(60%) opacity(0.7)':''}">
         <span style="position:absolute;top:6px;left:6px;font-size:9px;font-weight:800;background:#ff6b35;color:#fff;border-radius:5px;padding:2px 6px">${promo.desconto}</span>
       </div>
@@ -932,10 +1009,10 @@ setInterval(() => {
 renderGrid(getProdutosBase());
 window.scrollTo(0, 0);
 
-window.addEventListener('pageshow', function() { fecharModal(); fecharGaleria(); });
-window.addEventListener('focus', function() { fecharModal(); });
+window.addEventListener('pageshow', function() { fecharModal(); fecharGaleria(); document.body.style.overflow=''; });
+window.addEventListener('focus', function() { fecharModal(); document.body.style.overflow=''; });
 document.addEventListener('visibilitychange', function() {
-  if(document.visibilityState === 'visible') fecharModal();
+  if(document.visibilityState === 'visible'){ fecharModal(); document.body.style.overflow=''; }
 });
 </script>
 </body>
