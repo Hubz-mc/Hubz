@@ -94,13 +94,17 @@ header h1 span{color:#ff6b35}
 /* Badge de desconto */
 .promo-badge-desc{
   flex-shrink:0;
-  font-size:15px;font-weight:900;
-  background:linear-gradient(135deg,#ff6b35,#ff3d00);
-  color:#fff;border-radius:10px;
-  padding:9px 13px;
+  font-size:14px;font-weight:900;
+  background:#ff4500;
+  color:#fff;
+  padding:6px 10px 6px 14px;
   letter-spacing:0.3px;
-  box-shadow:0 3px 12px rgba(255,61,0,0.55);
+  clip-path:polygon(10px 0%,100% 0%,100% 100%,10px 100%,0% 50%);
+  box-shadow:-2px 2px 10px rgba(255,61,0,0.5);
   animation:glow 2s ease-in-out infinite;
+  line-height:1;
+  display:inline-flex;align-items:center;justify-content:center;
+  position:absolute;top:10px;right:-4px;
 }
 @keyframes glow{
   0%,100%{box-shadow:0 3px 12px rgba(255,61,0,0.55)}
@@ -339,11 +343,24 @@ header h1 span{color:#ff6b35}
   .modal-img{height:260px}
   .modal-img-wrap{border-radius:20px 20px 0 0}
 
-  /* Desktop gallery: larger slide images */
-  .gallery-slide img{max-height:calc(100vh - 200px)}
-  .gallery-slide{padding:0 70px}
-  .gallery-arrow.prev{left:14px}
-  .gallery-arrow.next{right:14px}
+  /* Desktop gallery */
+  .gallery-overlay{flex-direction:row;align-items:stretch;padding:0}
+  .gallery-main{margin-top:0;flex:1;max-width:calc(100% - 160px);align-self:stretch}
+  .gallery-slide{padding:40px 80px;height:100%}
+  .gallery-slide img{max-height:calc(100vh - 120px);max-width:100%;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.6)}
+  .gallery-arrow{width:52px;height:52px;font-size:24px}
+  .gallery-arrow.prev{left:20px}
+  .gallery-arrow.next{right:20px}
+  .gallery-thumbs{
+    flex-direction:column;justify-content:center;gap:10px;
+    padding:24px 16px;width:160px;flex-shrink:0;
+    overflow-y:auto;overflow-x:hidden;
+    border-left:1px solid rgba(255,255,255,0.07);
+    background:rgba(0,0,0,0.4);
+  }
+  .gallery-thumb{flex:0 0 110px;height:110px;width:100%;border-radius:10px}
+  .gallery-counter{position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:3}
+  .gallery-close{top:20px;right:20px;width:44px;height:44px;font-size:22px}
 }
 
 @media(min-width:1100px){
@@ -373,9 +390,9 @@ header h1 span{color:#ff6b35}
 </header>
 
 <!-- Carrossel de Promoções (mobile) -->
-<div class="promo-carousel" id="promo-carousel">
+<div class="promo-carousel" id="promo-carousel" style="display:none">
   <div class="promo-label"><span class="promo-label-fire">🔥</span> Promoções em destaque</div>
-  <div class="carousel-track" id="carousel-track" style="display:none"></div>
+  <div class="carousel-track" id="carousel-track"></div>
   <div class="promo-dots" id="promo-dots"></div>
 </div>
 
@@ -422,10 +439,10 @@ header h1 span{color:#ff6b35}
 
 <!-- GALERIA LIGHTBOX -->
 <div class="gallery-overlay" id="gallery-overlay">
-  <div class="gallery-counter" id="gallery-counter">1 / 1</div>
   <button class="gallery-close" id="gallery-close">✕</button>
 
   <div class="gallery-main" id="gallery-main">
+    <div class="gallery-counter" id="gallery-counter">1 / 1</div>
     <div class="gallery-slides" id="gallery-slides"></div>
     <button class="gallery-arrow prev" id="gallery-prev">&#8249;</button>
     <button class="gallery-arrow next" id="gallery-next">&#8250;</button>
@@ -889,8 +906,8 @@ function renderCarousel(){
         <div class="promo-img-overlay"></div>
         <div class="promo-img-footer">
           <div class="promo-title-over">${promo.titulo}</div>
-          <span class="promo-badge-desc">${promo.desconto}</span>
         </div>
+        <span class="promo-badge-desc">${promo.desconto}</span>
       </div>
       <div class="promo-card-body">
         <div class="promo-tag">${promo.tag}</div>
@@ -969,7 +986,7 @@ function renderSidebarDesktop(){
     card.innerHTML = `
       <div style="position:relative;line-height:0;font-size:0">
         <img class="sd-img" src="${promo.imagem}" alt="${promo.titulo}" loading="lazy" style="${expirado?'filter:grayscale(60%) opacity(0.7)':''}">
-        <span style="position:absolute;top:6px;left:6px;font-size:9px;font-weight:800;background:#ff6b35;color:#fff;border-radius:5px;padding:2px 6px">${promo.desconto}</span>
+        <span style="position:absolute;top:10px;right:-4px;font-size:12px;font-weight:900;background:#ff4500;color:#fff;padding:5px 10px 5px 14px;clip-path:polygon(10px 0%,100% 0%,100% 100%,10px 100%,0% 50%);box-shadow:-2px 2px 8px rgba(255,69,0,0.45);letter-spacing:0.3px;display:inline-flex;align-items:center;justify-content:center;line-height:1">${promo.desconto}</span>
       </div>
       <div class="sd-body">
         <div class="sd-tag">${promo.tag}</div>
@@ -1015,6 +1032,16 @@ setInterval(() => {
 }, 1000);
 renderGrid(getProdutosBase());
 window.scrollTo(0, 0);
+
+// Abre modal direto pelo link: ?produto=ID
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const idParam = params.get('produto');
+  if (idParam) {
+    const p = produtos.find(x => String(x.id) === String(idParam));
+    if (p) setTimeout(() => abrirModal(p), 400);
+  }
+})();
 
 window.addEventListener('pageshow', function() { fecharModal(); fecharGaleria(); document.body.style.overflow=''; });
 window.addEventListener('focus', function() { fecharModal(); document.body.style.overflow=''; });
