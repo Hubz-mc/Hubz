@@ -220,21 +220,17 @@ header h1 span{color:#ff6b35}
 .modal-body{padding:16px 20px 4px}
 .modal-price-overlay{
   position:absolute;bottom:0;left:0;right:0;
-  padding:32px 16px 14px;
-  background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+  padding:48px 16px 16px;
+  background:linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.5) 60%, transparent 100%);
   pointer-events:none;
 }
 .modal-price-badge{
-  display:inline-flex;align-items:baseline;gap:6px;
-  background:rgba(0,0,0,0.45);
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-  border:1px solid rgba(255,255,255,0.12);
-  border-radius:14px;
-  padding:8px 14px;
+  display:flex;flex-direction:column;gap:3px;
 }
-.modal-price-value{font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1}
-.modal-price-inst{font-size:11px;font-weight:600;color:rgba(255,255,255,0.6);margin-left:2px}
+.modal-price-original{font-size:11px;font-weight:600;color:rgba(255,255,255,0.45);text-decoration:line-through;line-height:1}
+.modal-price-main{display:flex;align-items:baseline;gap:8px}
+.modal-price-value{font-size:30px;font-weight:900;color:#ff6b35;letter-spacing:-1px;line-height:1}
+.modal-price-inst{font-size:12px;font-weight:600;color:rgba(255,255,255,0.55);padding:3px 8px;background:rgba(255,255,255,0.1);border-radius:20px;line-height:1.4}
 
 
 .modal-badge{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;background:rgba(255,107,53,0.15);color:#ff6b35;border-radius:7px;padding:4px 9px;margin-bottom:8px}
@@ -418,8 +414,11 @@ header h1 span{color:#ff6b35}
         <div class="img-counter" id="modal-img-counter" style="display:none"></div>
         <div class="modal-price-overlay">
           <div class="modal-price-badge">
-            <span class="modal-price-value" id="m-price"></span>
-            <span class="modal-price-inst" id="m-inst"></span>
+            <span class="modal-price-original" id="m-original"></span>
+            <div class="modal-price-main">
+              <span class="modal-price-value" id="m-price"></span>
+              <span class="modal-price-inst" id="m-inst"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -457,7 +456,7 @@ const produtos = [
     id:1, categoria:"Blusa",
     nome:"Kit 5 Blusas Feminina",
     descricao:"Fabricada com material principal de algodão, ela foi projetada pensando no bem-estar do seu corpo.",
-    imagem:"img/Kit 5 Blusas.jpg",
+    imagem:"img/ID1.png",
     galeria:["img/Kit 5 Blusas01.png","img/Kit 5 Blusas02.png"], 
     features:["Algodão","Lisa","Passeio"],
     lojas:[
@@ -480,7 +479,7 @@ const produtos = [
     id:3, categoria:"Vestido",
     nome:"Vestido feminino",
     descricao:"Perfeito para qualquer ocasião. Você pode usar em festas, jantar ou chás de revelação, é só combinar com aquela sandália bafônica!",
-    imagem:"img/Vestido.png",
+    imagem:"img/ID3.png",
     galeria:["img/Vestido01.png","img/Vestido02.png"],
     features:["Manga Curta","Casual","Verão e inverno"],
     lojas:[
@@ -600,6 +599,8 @@ function atualizarPreco(p,i){
   const l=p.lojas[i];
   document.getElementById('m-price').textContent=l.preco;
   document.getElementById('m-inst').textContent=l.parcelas;
+  const origEl=document.getElementById('m-original');
+  if(origEl) origEl.textContent=l.precoOriginal||'';
   const btn=document.getElementById('m-btn');
   btn.dataset.href=l.link;
   btn.textContent=`Comprar na ${l.nome}`;
