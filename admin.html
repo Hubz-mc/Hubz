@@ -584,8 +584,8 @@ document.getElementById('confirm-overlay').addEventListener('click', e => {
 ═══════════════════════════════════════ */
 async function inicializar() {
   await carregarTimers();
-  await carregarProdutos();
-  await carregarPromos();
+  await carregarPromos();   // promos primeiro
+  await carregarProdutos(); // produtos depois, já filtra corretamente
 }
 
 /* ═══════════════════════════════════════
@@ -708,14 +708,19 @@ async function salvarTodosProdutos() {
 }
 
 function renderProdutos() {
-  document.getElementById('produtos-count').textContent = `${produtos.length} produto(s) cadastrado(s)`;
+  // IDs dos produtos que estão vinculados a alguma promoção
+  const idsEmPromocao = new Set(promos.map(pr => pr.produtoId).filter(Boolean));
+  const produtosFiltrados = produtos.filter(p => !idsEmPromocao.has(p.id));
+
+  document.getElementById('produtos-count').textContent = `${produtosFiltrados.length} produto(s) cadastrado(s)`;
   const list = document.getElementById('produtos-list');
   list.innerHTML = '';
-  if (!produtos.length) {
+  if (!produtosFiltrados.length) {
     list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>Nenhum produto ainda. Clique em "Novo produto".</p></div>';
     return;
   }
-  produtos.forEach((p, idx) => {
+  produtosFiltrados.forEach((p) => {
+    const idx = produtos.indexOf(p);
     const card = document.createElement('div');
     card.className = 'item-card';
     card.id = 'pcard-' + idx;
@@ -1115,6 +1120,7 @@ async function salvarPromo(idx) {
     renderSelector();
     toast('Promoção salva com sucesso!');
     renderPromos();
+    renderProdutos();
     document.getElementById('promoform-' + idx).classList.add('open');
   } catch(e) {
     toast('Erro ao salvar. Tente novamente.', false);
@@ -1130,6 +1136,7 @@ function deletarPromo(idx) {
     await db.ref('timers/promo_' + idx).remove();
     promos.splice(idx, 1);
     renderPromos();
+    renderProdutos();
     toast('Promoção excluída.');
   });
 }
@@ -1178,6 +1185,7 @@ async function criarPromo() {
     promos.push(p);
     fecharNovaPromo();
     renderPromos();
+    renderProdutos();
     toast('Promoção criada com sucesso!');
   } catch(e) {
     toast('Erro ao criar promoção.', false);

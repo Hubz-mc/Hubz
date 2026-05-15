@@ -38,6 +38,59 @@ header h1 span{color:#ff6b35}
 .btn-mini{display:block;width:100%;padding:9px;background:#ff6b35;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;text-align:center;cursor:pointer;text-decoration:none;transition:background 0.15s}
 .btn-mini:active{background:#e55a28}
 
+/* ═══ LOADING SCREEN ═══ */
+#loading-screen{
+  position:fixed;inset:0;z-index:9999;
+  background:#0f0f0f;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:0;
+  transition:opacity 0.6s ease, visibility 0.6s ease;
+}
+#loading-screen.hide{
+  opacity:0;visibility:hidden;pointer-events:none;
+}
+.ls-logo{
+  font-size:28px;font-weight:800;letter-spacing:-0.5px;
+  color:#fff;margin-bottom:10px;
+}
+.ls-logo span{color:#ff6b35}
+.ls-tagline{
+  font-size:12px;color:#444;letter-spacing:1px;
+  margin-bottom:48px;font-weight:500;
+}
+.ls-bar-wrap{
+  width:140px;height:3px;
+  background:rgba(255,255,255,0.07);
+  border-radius:99px;overflow:hidden;
+  margin-bottom:28px;
+}
+.ls-bar{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,#ff6b35,#ff3d00);
+  border-radius:99px;
+  transition:width 0.4s ease;
+}
+.ls-dots{display:flex;gap:7px;align-items:center}
+.ls-dots span{
+  width:7px;height:7px;border-radius:50%;
+  background:#ff6b35;opacity:0.3;
+  animation:lsDot 1.2s ease-in-out infinite;
+}
+.ls-dots span:nth-child(2){animation-delay:.2s}
+.ls-dots span:nth-child(3){animation-delay:.4s}
+@keyframes lsDot{
+  0%,80%,100%{opacity:0.2;transform:scale(0.8)}
+  40%{opacity:1;transform:scale(1.1)}
+}
+.ls-text{
+  font-size:12px;color:#444;margin-top:20px;
+  letter-spacing:0.5px;font-weight:500;
+  min-height:18px;
+}
+
+/* Esconde seção até carregar */
+.section-label{display:none}
+
 /* CAROUSEL */
 .promo-carousel{padding:16px 0 8px;background:#0f0f0f}
 .promo-label{font-size:11px;font-weight:700;color:#ff6b35;text-transform:uppercase;letter-spacing:1.2px;padding:0 16px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
@@ -362,68 +415,6 @@ header h1 span{color:#ff6b35}
 @media(min-width:1100px){
   .grid{grid-template-columns:repeat(4,1fr)}
 }
-
-/* ═══════════════════════════════════════
-   LOADING SCREEN
-═══════════════════════════════════════ */
-#loading-screen{
-  position:fixed;inset:0;z-index:9999;
-  background:#0f0f0f;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:0;
-  transition:opacity 0.5s ease, visibility 0.5s ease;
-}
-#loading-screen.hide{
-  opacity:0;visibility:hidden;pointer-events:none;
-}
-
-.ls-logo{
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  font-size:28px;font-weight:800;letter-spacing:-0.5px;
-  color:#fff;margin-bottom:48px;
-  animation:lsPulse 2s ease-in-out infinite;
-}
-.ls-logo span{color:#ff6b35}
-
-@keyframes lsPulse{
-  0%,100%{opacity:1}
-  50%{opacity:0.6}
-}
-
-/* Barra de progresso */
-.ls-bar-wrap{
-  width:140px;height:3px;
-  background:rgba(255,255,255,0.07);
-  border-radius:99px;overflow:hidden;
-  margin-bottom:28px;
-}
-.ls-bar{
-  height:100%;width:0%;
-  background:linear-gradient(90deg,#ff6b35,#ff3d00);
-  border-radius:99px;
-  transition:width 0.4s ease;
-}
-
-/* Bolinhas animadas */
-.ls-dots{display:flex;gap:7px;align-items:center}
-.ls-dots span{
-  width:7px;height:7px;border-radius:50%;
-  background:#ff6b35;opacity:0.3;
-  animation:lsDot 1.2s ease-in-out infinite;
-}
-.ls-dots span:nth-child(2){animation-delay:.2s}
-.ls-dots span:nth-child(3){animation-delay:.4s}
-
-@keyframes lsDot{
-  0%,80%,100%{opacity:0.2;transform:scale(0.8)}
-  40%{opacity:1;transform:scale(1.1)}
-}
-
-.ls-text{
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  font-size:12px;color:#444;margin-top:20px;
-  letter-spacing:0.5px;font-weight:500;
-}
 </style>
 </head>
 <body>
@@ -431,13 +422,14 @@ header h1 span{color:#ff6b35}
 <!-- TELA DE CARREGAMENTO -->
 <div id="loading-screen">
   <div class="ls-logo">Minha <span>Loja</span></div>
+  <div class="ls-tagline">carregando produtos...</div>
   <div class="ls-bar-wrap">
     <div class="ls-bar" id="ls-bar"></div>
   </div>
   <div class="ls-dots">
     <span></span><span></span><span></span>
   </div>
-  <div class="ls-text" id="ls-text">Carregando produtos...</div>
+  <div class="ls-text" id="ls-text"></div>
 </div>
 
 <header>
@@ -525,9 +517,58 @@ header h1 span{color:#ff6b35}
 </div>
 
 <script>
-// Produtos e promoções carregados do Firebase (gerenciados pelo admin)
-let produtos = [];
-let produtosCarregados = false;
+/* ═══════════ GRID ═══════════ */
+let filtroAtivo = 'Todas';
+
+function getProdutosBase(){
+  return produtos.filter(p=>!promocoes.some(pr=>pr.produtoId===p.id));
+}
+
+function aplicarFiltros(){
+  const q = document.getElementById('search-input').value.toLowerCase();
+  let lista = getProdutosBase();
+  if(filtroAtivo !== 'Todas') lista = lista.filter(p => p.categoria === filtroAtivo);
+  if(q) lista = lista.filter(p => p.nome.toLowerCase().includes(q) || p.categoria.toLowerCase().includes(q));
+  renderGrid(lista);
+}
+
+function renderGrid(lista){
+  const g=document.getElementById('grid');
+  g.innerHTML='';
+  if(lista.length === 0){
+    g.innerHTML=`<div class="empty-state"><span>🔍</span>Nenhum produto encontrado</div>`;
+    return;
+  }
+  lista.forEach((p, idx)=>{
+    const c=document.createElement('div');
+    c.className='card';
+    c.style.animationDelay = `${idx * 0.07}s`;
+    c.innerHTML=`
+      <img class="card-img" src="${p.imagem}" alt="${p.nome}" loading="lazy">
+      <span class="badge">${p.categoria}</span>
+      <div class="card-body">
+        <div class="card-name">${p.nome}</div>
+        <div class="card-price">${p.lojas[0].preco}<small>${p.lojas[0].parcelas}</small></div>
+        <a class="btn-mini" href="#">Ver oferta</a>
+      </div>`;
+    c.querySelector('.btn-mini').onclick=e=>{e.preventDefault();abrirModal(p);};
+    c.querySelector('.card-img').onclick=()=>abrirModal(p);
+    c.querySelector('.card-name').onclick=()=>abrirModal(p);
+    g.appendChild(c);
+  });
+}
+
+// Filtros
+document.getElementById('filter-bar').addEventListener('click', e => {
+  const btn = e.target.closest('.filter-btn');
+  if(!btn) return;
+  filtroAtivo = btn.dataset.cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+  aplicarFiltros();
+});
+
+document.getElementById('search-input').oninput = aplicarFiltros;
+
 
 let lojaAtiva = {};
 
@@ -762,64 +803,87 @@ document.addEventListener('mouseup', e => {
   isMouseDragging = false;
 });
 
-/* ═══════════ GRID ═══════════ */
-let filtroAtivo = 'Todas';
-
-function getProdutosBase(){
-  return produtos.filter(p=>!promocoes.some(pr=>pr.produtoId===p.id));
-}
-
-function aplicarFiltros(){
-  const q = document.getElementById('search-input').value.toLowerCase();
-  let lista = getProdutosBase();
-  if(filtroAtivo !== 'Todas') lista = lista.filter(p => p.categoria === filtroAtivo);
-  if(q) lista = lista.filter(p => p.nome.toLowerCase().includes(q) || p.categoria.toLowerCase().includes(q));
-  renderGrid(lista);
-}
-
-function renderGrid(lista){
-  const g=document.getElementById('grid');
-  g.innerHTML='';
-  if(lista.length === 0){
-    g.innerHTML=`<div class="empty-state"><span>🔍</span>Nenhum produto encontrado</div>`;
-    return;
+/* ═══════════ DADOS PADRÃO (fallback e seed inicial) ═══════════ */
+const produtosPadrao = [
+  {
+    id:1, categoria:"Blusa",
+    nome:"Kit 5 Blusas Feminina",
+    descricao:"Fabricada com material principal de algodão, ela foi projetada pensando no bem-estar do seu corpo.",
+    imagem:"img/ID1.png",
+    galeria:["img/Kit 5 Blusas01.png","img/Kit 5 Blusas02.png"],
+    features:["Algodão","Lisa","Passeio"],
+    lojas:[
+      {nome:"Shopee",preco:"R$ 78,66",parcelas:"12x de R$ 8,04",link:"https://s.shopee.com.br/5flSWgEUTF?share_channel_code=1"},
+      {nome:"Mercado Livre",preco:"R$ 82,00",parcelas:"12x de R$ 8,40",link:"https://www.mercadolivre.com.br"},
+    ]
+  },
+  {
+    id:2, categoria:"Conjunto",
+    nome:"Regata + Short",
+    descricao:"Esse conjunto é a peça chave que faltava no seu guarda-roupa para você arrasar em qualquer ocasião.",
+    imagem:"img/Regata.jpg",
+    galeria:["img/Regata01.png","img/Regata02.png"],
+    features:["Suplex","alfaiataria"],
+    lojas:[{nome:"Shopee",preco:"R$ 49,90",parcelas:"9x de R$ 6,31",link:"https://s.shopee.com.br/30khMfXDtB"}]
+  },
+  {
+    id:3, categoria:"Vestido",
+    nome:"Vestido feminino",
+    descricao:"Perfeito para qualquer ocasião. Você pode usar em festas, jantar ou chás de revelação!",
+    imagem:"img/ID3.png",
+    galeria:["img/Vestido01.png","img/Vestido02.png"],
+    features:["Manga Curta","Casual","Verão e inverno"],
+    lojas:[{nome:"Shopee",preco:"R$ 53,35",parcelas:"10x de R$ 6,12",link:"https://s.shopee.com.br/5VS2LznSMX"}]
+  },
+  {
+    id:4, categoria:"Casual",
+    nome:"Cropped Regata",
+    descricao:"Garanta o look perfeito para torcer com estilo e conforto!",
+    imagem:"img/Brasil.jpg",
+    galeria:["img/Brasil01.png","img/Brasil02.png"],
+    features:["Lisa","Verão"],
+    lojas:[{nome:"Shopee",preco:"R$ 31,98",parcelas:"6x de R$ 5,96",link:"https://s.shopee.com.br/1VvtibJC5p"}]
+  },
+  {
+    id:5, categoria:"Casual",
+    nome:"Pijama Virginia",
+    descricao:"Pijama confortável e estiloso, perfeito para noites de descanso.",
+    imagem:"img/Promo01.jpg",
+    galeria:["img/Promo01.jpg"],
+    features:["Confortável","Macio","Dormir"],
+    lojas:[{nome:"Shopee",preco:"R$ 21,67",parcelas:"",link:"https://s.shopee.com.br/4fsvUTE6gU"}]
+  },
+  {
+    id:6, categoria:"Conjunto",
+    nome:"Kit Short Canelado",
+    descricao:"Kit de shorts canelados, combinação perfeita de estilo e conforto.",
+    imagem:"img/Promo02.jpg",
+    galeria:["img/Promo02.jpg"],
+    features:["Canelado","Casual","Verão"],
+    lojas:[{nome:"Shopee",preco:"R$ 23,49",parcelas:"",link:"https://s.shopee.com.br/30khVbc9YK"}]
+  },
+  {
+    id:7, categoria:"Blusa",
+    nome:"Kit 10 Blusa Feminina",
+    descricao:"Kit com 10 blusas femininas variadas, ideal para renovar o guarda-roupa.",
+    imagem:"img/Promo03.jpg",
+    galeria:["img/Promo03.jpg"],
+    features:["Algodão","Lisa","Passeio"],
+    lojas:[{nome:"Shopee",preco:"R$ 59,98",parcelas:"",link:"https://s.shopee.com.br/175w8Cc7Y"}]
   }
-  lista.forEach((p, idx)=>{
-    const c=document.createElement('div');
-    c.className='card';
-    c.style.animationDelay = `${idx * 0.07}s`;
-    c.innerHTML=`
-      <img class="card-img" src="${p.imagem}" alt="${p.nome}" loading="lazy">
-      <span class="badge">${p.categoria}</span>
-      <div class="card-body">
-        <div class="card-name">${p.nome}</div>
-        <div class="card-price">${p.lojas[0].preco}<small>${p.lojas[0].parcelas}</small></div>
-        <a class="btn-mini" href="#">Ver oferta</a>
-      </div>`;
-    c.querySelector('.btn-mini').onclick=e=>{e.preventDefault();abrirModal(p);};
-    c.querySelector('.card-img').onclick=()=>abrirModal(p);
-    c.querySelector('.card-name').onclick=()=>abrirModal(p);
-    g.appendChild(c);
-  });
-}
+];
 
-// Filtros
-document.getElementById('filter-bar').addEventListener('click', e => {
-  const btn = e.target.closest('.filter-btn');
-  if(!btn) return;
-  filtroAtivo = btn.dataset.cat;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b === btn));
-  aplicarFiltros();
-});
+const promocoesPadrao = [
+  {titulo:"PIJAMA VIRGINIA",tag:"Roupa",preco:"R$ 21,67",precoOriginal:"R$ 39,90",desconto:"-46%",imagem:"img/Promo01.jpg",produtoId:5,duracao:6*60*60},
+  {titulo:"Kit Short Canelado",tag:"Roupa",preco:"R$ 23,99",precoOriginal:"R$ 80,00",desconto:"-70%",imagem:"img/Promo02.jpg",produtoId:6,duracao:24*60*60},
+  {titulo:"Kit 10 Blusa Feminina",tag:"Roupa",preco:"R$ 58,99",precoOriginal:"R$ 100,00",desconto:"-41%",imagem:"img/Promo03.jpg",produtoId:7,duracao:6*60*60},
+];
 
-document.getElementById('search-input').oninput = aplicarFiltros;
-
-/* ═══════════ CARROSSEL ═══════════ */
-// Promoções carregadas do Firebase
+// Variáveis globais que serão preenchidas pelo Firebase (ou pelo fallback)
+let produtos = [];
 let promocoes = [];
 
-// ═══════════ FIREBASE TIMER ═══════════
-// Substitua com as suas credenciais do Firebase
+// ═══════════ FIREBASE ═══════════
 const firebaseConfig = {
   apiKey: "AIzaSyChe4rWJphoPw4VQ1YM3OX72UmTvRKI2FE",
   authDomain: "tela-login-5062e.firebaseapp.com",
@@ -830,7 +894,8 @@ const firebaseConfig = {
   appId: "1:685048984991:web:dd6fcf2ecc92af1bbef9aa"
 };
 
-/* ═══ LOADING SCREEN ═══ */
+let endTimes = [];
+
 function setProgress(pct, texto) {
   document.getElementById('ls-bar').style.width = pct + '%';
   if (texto) document.getElementById('ls-text').textContent = texto;
@@ -838,10 +903,9 @@ function setProgress(pct, texto) {
 function esconderLoading() {
   setTimeout(() => {
     document.getElementById('loading-screen').classList.add('hide');
-  }, 300);
+    document.querySelector('.section-label').style.display = '';
+  }, 400);
 }
-
-let endTimes = [];
 
 async function inicializarTimers() {
   try {
@@ -850,46 +914,34 @@ async function inicializarTimers() {
 
     setProgress(20, 'Conectando...');
 
-    // ── Carrega produtos do Firebase ──
+    // ── Produtos ──
     const snapProd = await db.ref('produtos').get();
     setProgress(45, 'Carregando produtos...');
     if (snapProd.exists()) {
-      produtos = Object.values(snapProd.val());
+      const val = snapProd.val();
+      produtos = Array.isArray(val) ? val.filter(Boolean) : Object.values(val);
     } else {
-      produtos = [
-        { id:1, categoria:"Blusa", nome:"Kit 5 Blusas Feminina", descricao:"Fabricada com material principal de algodão.", imagem:"img/ID1.png", galeria:["img/Kit 5 Blusas01.png","img/Kit 5 Blusas02.png"], features:["Algodão","Lisa","Passeio"], lojas:[{nome:"Shopee",preco:"R$ 78,66",parcelas:"12x de R$ 8,04",link:"https://s.shopee.com.br/5flSWgEUTF?share_channel_code=1"},{nome:"Mercado Livre",preco:"R$ 82,00",parcelas:"12x de R$ 8,40",link:"https://www.mercadolivre.com.br"}] },
-        { id:2, categoria:"Conjunto", nome:"Regata + Short", descricao:"Esse conjunto é a peça chave que faltava no seu guarda-roupa.", imagem:"img/Regata.jpg", galeria:["img/Regata01.png","img/Regata02.png"], features:["Suplex","alfaiataria"], lojas:[{nome:"Shopee",preco:"R$ 49,90",parcelas:"9x de R$ 6,31",link:"https://s.shopee.com.br/30khMfXDtB"}] },
-        { id:3, categoria:"Vestido", nome:"Vestido feminino", descricao:"Perfeito para qualquer ocasião.", imagem:"img/ID3.png", galeria:["img/Vestido01.png","img/Vestido02.png"], features:["Manga Curta","Casual","Verão e inverno"], lojas:[{nome:"Shopee",preco:"R$ 53,35",parcelas:"10x de R$ 6,12",link:"https://s.shopee.com.br/5VS2LznSMX"}] },
-        { id:4, categoria:"Casual", nome:"Cropped Regata", descricao:"Garanta o look perfeito para torcer com estilo!", imagem:"img/Brasil.jpg", galeria:["img/Brasil01.png","img/Brasil02.png"], features:["Lisa","Verão"], lojas:[{nome:"Shopee",preco:"R$ 31,98",parcelas:"6x de R$ 5,96",link:"https://s.shopee.com.br/1VvtibJC5p"}] },
-        { id:5, categoria:"Casual", nome:"Pijama Virginia", descricao:"Pijama confortável e estiloso.", imagem:"img/Promo01.jpg", galeria:["img/Promo01.jpg"], features:["Confortável","Macio","Dormir"], lojas:[{nome:"Shopee",preco:"R$ 21,67",parcelas:"",link:"https://s.shopee.com.br/4fsvUTE6gU"}] },
-        { id:6, categoria:"Conjunto", nome:"Kit Short Canelado", descricao:"Combinação perfeita de estilo e conforto.", imagem:"img/Promo02.jpg", galeria:["img/Promo02.jpg"], features:["Canelado","Casual","Verão"], lojas:[{nome:"Shopee",preco:"R$ 23,49",parcelas:"",link:"https://s.shopee.com.br/30khVbc9YK"}] },
-        { id:7, categoria:"Blusa", nome:"Kit 10 Blusa Feminina", descricao:"Kit com 10 blusas femininas variadas.", imagem:"img/Promo03.jpg", galeria:["img/Promo03.jpg"], features:["Algodão","Lisa","Passeio"], lojas:[{nome:"Shopee",preco:"R$ 59,98",parcelas:"",link:"https://s.shopee.com.br/175w8Cc7Y"}] }
-      ];
-      // Salva os produtos padrão no Firebase para o admin poder gerenciá-los
-      const objProd = {};
-      produtos.forEach(p => { objProd['p' + p.id] = p; });
-      await db.ref('produtos').set(objProd);
+      produtos = produtosPadrao;
+      const obj = {};
+      produtosPadrao.forEach(p => { obj['p' + p.id] = p; });
+      await db.ref('produtos').set(obj);
     }
 
-    // ── Carrega promoções do Firebase ──
+    // ── Promoções ──
     const snapPromo = await db.ref('promocoes').get();
-    setProgress(70, 'Carregando promoções...');
+    setProgress(65, 'Carregando promoções...');
     if (snapPromo.exists()) {
-      promocoes = Object.values(snapPromo.val());
+      const val = snapPromo.val();
+      promocoes = Array.isArray(val) ? val.filter(Boolean) : Object.values(val);
     } else {
-      promocoes = [
-        {titulo:"PIJAMA VIRGINIA",tag:"Roupa",preco:"R$ 21,67",precoOriginal:"R$ 39,90",desconto:"-46%",imagem:"img/Promo01.jpg",produtoId:5,duracao:6*60*60},
-        {titulo:"Kit Short Canelado",tag:"Roupa",preco:"R$ 23,99",precoOriginal:"R$ 80,00",desconto:"-70%",imagem:"img/Promo02.jpg",produtoId:6,duracao:24*60*60},
-        {titulo:"Kit 10 Blusa Feminina",tag:"Roupa",preco:"R$ 58,99",precoOriginal:"R$ 100,00",desconto:"-41%",imagem:"img/Promo03.jpg",produtoId:7,duracao:6*60*60},
-      ];
-      // Salva as promoções padrão no Firebase para o admin poder gerenciá-las
-      const objPromo = {};
-      promocoes.forEach((p, i) => { objPromo['promo' + i] = p; });
-      await db.ref('promocoes').set(objPromo);
+      promocoes = promocoesPadrao;
+      const obj = {};
+      promocoesPadrao.forEach((p, i) => { obj['promo' + i] = p; });
+      await db.ref('promocoes').set(obj);
     }
 
-    // ── Carrega timers ──
-    setProgress(88, 'Quase lá...');
+    // ── Timers ──
+    setProgress(85, 'Quase lá...');
     for (let i = 0; i < promocoes.length; i++) {
       const snap = await db.ref(`timers/promo_${i}`).get();
       if (snap.exists()) {
@@ -900,10 +952,11 @@ async function inicializarTimers() {
         endTimes[i] = endTime;
       }
     }
+
   } catch(e) {
     console.warn('Firebase indisponível, usando dados locais.', e);
-    if (!produtos.length) produtos = [];
-    if (!promocoes.length) promocoes = [];
+    if (!produtos.length) produtos = produtosPadrao;
+    if (!promocoes.length) promocoes = promocoesPadrao;
     const start = Date.now();
     promocoes.forEach((promo, i) => {
       endTimes[i] = start + (promo.duracao || 6*3600) * 1000;
@@ -911,14 +964,11 @@ async function inicializarTimers() {
   }
 
   setProgress(100, 'Pronto!');
-
-  // Renderiza o site com os dados carregados
   renderGrid(getProdutosBase());
   renderCarousel();
   renderSidebarDesktop();
   document.getElementById('carousel-track').style.display = '';
   document.getElementById('promo-carousel').style.display = '';
-
   esconderLoading();
 }
 
