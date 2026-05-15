@@ -3,97 +3,502 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin — Timers</title>
+<title>Admin — Painel</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f0f;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-#login-screen{width:100%;max-width:360px}
-#login-screen h1{font-size:20px;font-weight:800;margin-bottom:6px}
-#login-screen p{font-size:13px;color:#666;margin-bottom:28px}
+:root{
+  --bg:#0a0a0a;
+  --surface:#111;
+  --surface2:#1a1a1a;
+  --border:#222;
+  --accent:#ff6b35;
+  --accent2:#ff3d00;
+  --text:#fff;
+  --muted:#666;
+  --muted2:#444;
+  --danger:#ff4444;
+  --success:#2ecc71;
+  --radius:14px;
+}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+input,select,textarea,button{font-family:inherit}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ══════════════════════════
+   LOGIN
+══════════════════════════ */
+#login-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(255,107,53,0.08),transparent);
+}
+.login-box{width:100%;max-width:340px}
+.login-logo{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:32px;display:flex;align-items:center;gap:8px}
+.login-logo::before{content:'';width:8px;height:8px;background:var(--accent);border-radius:50%;display:inline-block;box-shadow:0 0 12px var(--accent)}
+.login-box h1{font-size:28px;font-weight:800;line-height:1.1;margin-bottom:6px}
+.login-box p{font-size:13px;color:var(--muted);margin-bottom:32px;font-family:'DM Mono',monospace}
 .field{margin-bottom:14px}
-.field label{display:block;font-size:12px;font-weight:700;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
-.field input{width:100%;background:#1c1c1e;border:1.5px solid #2c2c2e;border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;outline:none;transition:border-color 0.2s}
-.field input:focus{border-color:#ff6b35}
-.btn-login{width:100%;padding:13px;background:#ff6b35;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;margin-top:6px;transition:opacity 0.2s}
-.btn-login:active{opacity:0.85}
-.error-msg{font-size:12px;color:#ff4444;margin-top:10px;text-align:center;min-height:18px}
-#admin-screen{display:none;width:100%;max-width:400px}
-.admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
-.admin-header h1{font-size:18px;font-weight:800}
-.admin-header span{font-size:11px;color:#555}
-.btn-logout{background:none;border:1.5px solid #2c2c2e;border-radius:8px;color:#888;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;transition:all 0.15s}
-.btn-logout:hover{border-color:#ff4444;color:#ff4444}
-.panel{background:#1c1c1e;border-radius:16px;padding:20px}
-.sel-label{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
-.selector{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
-.sel-btn{background:#0f0f0f;border:1.5px solid #2c2c2e;border-radius:12px;padding:12px 14px;color:#aaa;font-size:13px;font-weight:700;cursor:pointer;text-align:left;transition:all 0.15s;display:flex;align-items:center;justify-content:space-between;width:100%}
-.sel-btn .restante{font-size:11px;color:#555;font-weight:600}
-.sel-btn.active{border-color:#ff6b35;color:#fff;background:#1a1a1a}
-.sel-btn.active .restante{color:#ff6b35}
-.tempo-label{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
-.inputs-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
-.inp-group{display:flex;flex-direction:column;gap:5px}
-.inp-group input{background:#0f0f0f;border:1.5px solid #2c2c2e;border-radius:10px;padding:10px 6px;color:#fff;font-size:16px;font-weight:800;text-align:center;outline:none;transition:border-color 0.2s;width:100%}
-.inp-group input:focus{border-color:#ff6b35}
-.inp-group label{font-size:10px;color:#555;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
-.btn-save{width:100%;padding:12px;background:#ff6b35;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;transition:opacity 0.15s}
-.btn-save:active{opacity:0.8}
-.btn-save:disabled{background:#2c2c2e;color:#555;cursor:not-allowed}
-.save-status{font-size:12px;text-align:center;margin-top:10px;min-height:18px;font-weight:700}
+.field label{display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:1.5px}
+.field input{
+  width:100%;background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--radius);padding:13px 15px;color:var(--text);
+  font-size:14px;outline:none;transition:border-color .2s;font-family:'DM Mono',monospace;
+}
+.field input:focus{border-color:var(--accent)}
+.btn-login{
+  width:100%;padding:14px;background:var(--accent);color:#fff;
+  border:none;border-radius:var(--radius);font-size:14px;font-weight:800;
+  cursor:pointer;margin-top:8px;transition:opacity .2s;letter-spacing:.5px;
+}
+.btn-login:hover{opacity:.9}
+.btn-login:active{opacity:.8}
+.error-msg{font-size:12px;color:var(--danger);margin-top:12px;text-align:center;min-height:18px;font-family:'DM Mono',monospace}
+
+/* ══════════════════════════
+   LAYOUT ADMIN
+══════════════════════════ */
+#admin-screen{display:none;min-height:100vh}
+
+.admin-sidebar{
+  position:fixed;top:0;left:0;width:220px;height:100vh;
+  background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;z-index:10;
+}
+.sidebar-logo{
+  padding:24px 20px 20px;
+  border-bottom:1px solid var(--border);
+  font-size:11px;font-weight:700;color:var(--accent);
+  letter-spacing:2px;text-transform:uppercase;
+  display:flex;align-items:center;gap:8px;
+}
+.sidebar-logo::before{content:'';width:7px;height:7px;background:var(--accent);border-radius:50%;box-shadow:0 0 10px var(--accent);flex-shrink:0}
+.sidebar-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:10px;
+  font-size:13px;font-weight:700;color:var(--muted);
+  cursor:pointer;transition:all .15s;border:none;background:none;
+  text-align:left;width:100%;letter-spacing:.2px;
+}
+.nav-item:hover{color:var(--text);background:var(--surface2)}
+.nav-item.active{color:var(--accent);background:rgba(255,107,53,.1)}
+.nav-item .icon{font-size:15px;width:18px;text-align:center}
+.nav-divider{height:1px;background:var(--border);margin:10px 0}
+.sidebar-footer{padding:16px 12px 20px}
+.user-chip{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:var(--surface2);border-radius:10px;margin-bottom:10px;
+}
+.user-avatar{width:30px;height:30px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.user-email-text{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-logout{
+  width:100%;padding:9px;border:1.5px solid var(--border);
+  border-radius:10px;color:var(--muted);font-size:12px;font-weight:700;
+  cursor:pointer;background:none;transition:all .15s;
+}
+.btn-logout:hover{border-color:var(--danger);color:var(--danger)}
+
+.admin-main{
+  margin-left:220px;padding:32px;min-height:100vh;
+  background:radial-gradient(ellipse 50% 40% at 80% 10%,rgba(255,107,53,.04),transparent);
+}
+
+.page{display:none}
+.page.active{display:block}
+
+/* ══════════════════════════
+   PAGE HEADER
+══════════════════════════ */
+.page-header{margin-bottom:28px}
+.page-title{font-size:24px;font-weight:800;margin-bottom:4px}
+.page-subtitle{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace}
+
+/* ══════════════════════════
+   TIMERS PAGE
+══════════════════════════ */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px}
+.panel-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.panel-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.selector{display:flex;flex-direction:column;gap:8px;margin-bottom:22px}
+.sel-btn{
+  background:var(--bg);border:1.5px solid var(--border);border-radius:12px;
+  padding:12px 14px;color:var(--muted);font-size:13px;font-weight:700;
+  cursor:pointer;text-align:left;transition:all .15s;
+  display:flex;align-items:center;justify-content:space-between;width:100%;
+}
+.sel-btn .restante{font-size:11px;color:var(--muted2);font-weight:600;font-family:'DM Mono',monospace}
+.sel-btn.active{border-color:var(--accent);color:var(--text)}
+.sel-btn.active .restante{color:var(--accent)}
+
+.inputs-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.inp-group{display:flex;flex-direction:column;gap:6px}
+.inp-group input{
+  background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
+  padding:11px 6px;color:var(--text);font-size:18px;font-weight:800;
+  text-align:center;outline:none;transition:border-color .2s;width:100%;
+  font-family:'DM Mono',monospace;
+}
+.inp-group input:focus{border-color:var(--accent)}
+.inp-group label{font-size:10px;color:var(--muted);text-align:center;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+
+.btn-primary{
+  padding:12px 20px;background:var(--accent);color:#fff;
+  border:none;border-radius:var(--radius);font-size:13px;font-weight:800;
+  cursor:pointer;transition:opacity .15s;letter-spacing:.3px;
+}
+.btn-primary:hover{opacity:.9}
+.btn-primary:active{opacity:.8}
+.btn-primary:disabled{background:var(--surface2);color:var(--muted);cursor:not-allowed;opacity:1}
+.btn-primary.full{width:100%}
+
+.btn-danger{
+  padding:10px 16px;background:transparent;color:var(--danger);
+  border:1.5px solid var(--danger);border-radius:var(--radius);font-size:12px;font-weight:700;
+  cursor:pointer;transition:all .15s;
+}
+.btn-danger:hover{background:var(--danger);color:#fff}
+
+.btn-secondary{
+  padding:10px 16px;background:var(--surface2);color:var(--text);
+  border:1.5px solid var(--border);border-radius:var(--radius);font-size:12px;font-weight:700;
+  cursor:pointer;transition:all .15s;
+}
+.btn-secondary:hover{border-color:var(--muted)}
+
+.save-status{font-size:12px;text-align:center;margin-top:12px;min-height:18px;font-weight:700;font-family:'DM Mono',monospace}
+.status-ok{color:var(--success)}
+.status-err{color:var(--danger)}
+
+.action-row{display:flex;gap:10px;align-items:center}
+
+/* ══════════════════════════
+   PRODUTOS & PROMOÇÕES
+══════════════════════════ */
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap}
+
+/* Cards de lista */
+.item-list{display:flex;flex-direction:column;gap:10px}
+
+.item-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;transition:border-color .15s;
+}
+.item-card:hover{border-color:var(--muted2)}
+
+.item-card-header{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;
+  cursor:pointer;
+}
+.item-thumb{
+  width:52px;height:52px;object-fit:cover;border-radius:10px;
+  background:var(--surface2);flex-shrink:0;border:1px solid var(--border);
+}
+.item-thumb-ph{
+  width:52px;height:52px;border-radius:10px;
+  background:var(--surface2);flex-shrink:0;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.item-info{flex:1;min-width:0}
+.item-name{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.item-meta{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.item-actions{display:flex;gap:6px}
+
+.btn-icon{
+  width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);
+  background:none;color:var(--muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+  transition:all .15s;flex-shrink:0;
+}
+.btn-icon:hover{border-color:var(--accent);color:var(--accent)}
+.btn-icon.del:hover{border-color:var(--danger);color:var(--danger)}
+
+.item-form{
+  border-top:1px solid var(--border);padding:16px;
+  display:none;flex-direction:column;gap:14px;
+  background:var(--bg);
+}
+.item-form.open{display:flex}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid.cols3{grid-template-columns:1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.form-input{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:10px;padding:10px 13px;color:var(--text);
+  font-size:13px;outline:none;transition:border-color .2s;font-family:'DM Mono',monospace;
+  width:100%;
+}
+.form-input:focus{border-color:var(--accent)}
+.form-textarea{resize:vertical;min-height:70px}
+
+.form-actions{display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:14px}
+
+/* Lojas dinâmicas */
+.lojas-list{display:flex;flex-direction:column;gap:8px}
+.loja-row{
+  display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:center;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;
+}
+.btn-add-loja{
+  padding:9px 14px;background:none;border:1.5px dashed var(--border);
+  border-radius:10px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;
+  transition:all .15s;width:100%;margin-top:4px;
+}
+.btn-add-loja:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Features tags */
+.features-input-wrap{display:flex;flex-wrap:wrap;gap:6px;align-items:center;
+  background:var(--surface);border:1.5px solid var(--border);border-radius:10px;
+  padding:8px 10px;min-height:42px;cursor:text;}
+.features-input-wrap:focus-within{border-color:var(--accent)}
+.feat-tag{display:flex;align-items:center;gap:5px;background:var(--surface2);
+  border-radius:6px;padding:4px 9px;font-size:12px;font-weight:600;color:var(--text)}
+.feat-tag button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0}
+.feat-tag button:hover{color:var(--danger)}
+.feat-input{background:none;border:none;outline:none;color:var(--text);font-size:12px;
+  font-family:inherit;min-width:80px;flex:1}
+
+/* Badge nova promo */
+.new-badge{
+  display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;
+  background:rgba(255,107,53,.12);color:var(--accent);border-radius:6px;
+  padding:3px 8px;margin-left:8px;letter-spacing:.5px;vertical-align:middle;
+}
+
+/* Galeria mini */
+.galeria-list{display:flex;flex-wrap:wrap;gap:8px}
+.galeria-item{position:relative;width:60px;height:60px;border-radius:8px;overflow:hidden;border:1.5px solid var(--border)}
+.galeria-item img{width:100%;height:100%;object-fit:cover}
+.galeria-item .del-gal{
+  position:absolute;top:2px;right:2px;width:18px;height:18px;
+  background:rgba(0,0,0,.7);border:none;color:#fff;border-radius:4px;
+  cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;
+}
+.btn-add-gal{
+  width:60px;height:60px;border-radius:8px;border:1.5px dashed var(--border);
+  background:none;color:var(--muted);font-size:22px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.btn-add-gal:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:14px 18px;font-size:13px;font-weight:700;
+  display:flex;align-items:center;gap:10px;
+  transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.2,.64,1);
+  z-index:999;max-width:280px;box-shadow:0 8px 32px rgba(0,0,0,.5);
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-color:rgba(46,204,113,.3);color:var(--success)}
+.toast.err{border-color:rgba(255,68,68,.3);color:var(--danger)}
+.toast-icon{font-size:16px}
+
+/* Loader */
+.spinner{
+  width:18px;height:18px;border:2.5px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .6s linear infinite;display:inline-block;vertical-align:middle;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Empty state */
+.empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-icon{font-size:36px;margin-bottom:12px}
+.empty p{font-size:13px}
+
+/* Confirm dialog */
+.confirm-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  opacity:0;visibility:hidden;transition:all .2s;
+}
+.confirm-overlay.open{opacity:1;visibility:visible}
+.confirm-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:18px;
+  padding:28px;max-width:340px;width:100%;text-align:center;
+}
+.confirm-box h3{font-size:18px;font-weight:800;margin-bottom:8px}
+.confirm-box p{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5;font-family:'DM Mono',monospace}
+.confirm-actions{display:flex;gap:10px}
+.confirm-actions button{flex:1}
+
+/* Responsive sidebar collapse */
+@media(max-width:700px){
+  .admin-sidebar{width:60px}
+  .sidebar-logo span,.nav-item span:last-child,.user-email-text,.btn-logout{display:none}
+  .nav-item{justify-content:center;padding:12px}
+  .admin-main{margin-left:60px;padding:20px 16px}
+  .form-grid{grid-template-columns:1fr}
+  .form-grid.cols3{grid-template-columns:1fr 1fr}
+  .loja-row{grid-template-columns:1fr 1fr;gap:6px}
+}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="login-screen">
-  <h1>🔐 Admin</h1>
-  <p>Acesso restrito — faça login para continuar</p>
-  <div class="field">
-    <label>Email</label>
-    <input type="email" id="email" placeholder="pequenosteve25@gmail.com">
+  <div class="login-box">
+    <div class="login-logo"><span>Admin</span></div>
+    <h1>Bem-vindo de volta</h1>
+    <p>// acesso restrito</p>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="seu@email.com">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
+    </div>
+    <button class="btn-login" onclick="fazerLogin()">Entrar</button>
+    <div class="error-msg" id="error-msg"></div>
   </div>
-  <div class="field">
-    <label>Senha</label>
-    <input type="password" id="senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
-  </div>
-  <button class="btn-login" onclick="fazerLogin()">Entrar</button>
-  <div class="error-msg" id="error-msg"></div>
 </div>
 
+<!-- ADMIN -->
 <div id="admin-screen">
-  <div class="admin-header">
-    <div>
-      <h1>⏱ Timers</h1>
-      <span id="user-email"></span>
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">
+      <span>Painel Admin</span>
     </div>
-    <button class="btn-logout" onclick="fazerLogout()">Sair</button>
-  </div>
-  <div class="panel">
-    <div class="sel-label">Selecione o produto</div>
-    <div class="selector" id="selector"></div>
-    <div class="tempo-label">Novo tempo</div>
-    <div class="inputs-row">
-      <div class="inp-group">
-        <input type="number" id="inp-h" min="0" max="999" placeholder="0">
-        <label>Horas</label>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-page="timers" onclick="navegar('timers',this)">
+        <span class="icon">⏱</span><span>Timers</span>
+      </button>
+      <button class="nav-item" data-page="produtos" onclick="navegar('produtos',this)">
+        <span class="icon">📦</span><span>Produtos</span>
+      </button>
+      <button class="nav-item" data-page="promocoes" onclick="navegar('promocoes',this)">
+        <span class="icon">🔥</span><span>Promoções</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-email-text" id="user-email"></div>
       </div>
-      <div class="inp-group">
-        <input type="number" id="inp-m" min="0" max="59" placeholder="0">
-        <label>Minutos</label>
+      <button class="btn-logout" onclick="fazerLogout()">↩ Sair</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+
+    <!-- PAGE: TIMERS -->
+    <div class="page active" id="page-timers">
+      <div class="page-header">
+        <div class="page-title">Timers</div>
+        <div class="page-subtitle">// controle os contadores das promoções em tempo real</div>
       </div>
-      <div class="inp-group">
-        <input type="number" id="inp-s" min="0" max="59" placeholder="0">
-        <label>Segundos</label>
+      <div class="panel">
+        <div class="panel-title">Selecionar promoção</div>
+        <div class="selector" id="selector"></div>
+        <div class="panel-title">Definir novo tempo</div>
+        <div class="inputs-row">
+          <div class="inp-group">
+            <input type="number" id="inp-h" min="0" max="999" placeholder="00">
+            <label>Horas</label>
+          </div>
+          <div class="inp-group">
+            <input type="number" id="inp-m" min="0" max="59" placeholder="00">
+            <label>Minutos</label>
+          </div>
+          <div class="inp-group">
+            <input type="number" id="inp-s" min="0" max="59" placeholder="00">
+            <label>Segundos</label>
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="btn-primary full" id="btn-save" onclick="salvarTimer()">Salvar timer</button>
+          <button class="btn-danger" onclick="zerarTimer()" title="Encerrar promoção agora">⏹ Zerar</button>
+        </div>
+        <div class="save-status" id="save-status"></div>
       </div>
     </div>
-    <button class="btn-save" id="btn-save" onclick="salvarTimer()">Salvar</button>
-    <div class="save-status" id="save-status"></div>
+
+    <!-- PAGE: PRODUTOS -->
+    <div class="page" id="page-produtos">
+      <div class="page-header">
+        <div class="page-title">Produtos</div>
+        <div class="page-subtitle">// gerencie os produtos do grid principal</div>
+      </div>
+      <div class="toolbar">
+        <span style="font-size:13px;color:var(--muted);font-family:'DM Mono',monospace" id="produtos-count"></span>
+        <button class="btn-primary" onclick="abrirNovoProduto()">+ Novo produto</button>
+      </div>
+
+      <!-- Formulário novo produto -->
+      <div id="form-novo-produto" style="display:none;margin-bottom:16px">
+        <div class="panel">
+          <div class="panel-title">Novo produto <span class="new-badge">novo</span></div>
+          <div id="form-np-body"></div>
+        </div>
+      </div>
+
+      <div class="item-list" id="produtos-list"></div>
+    </div>
+
+    <!-- PAGE: PROMOÇÕES -->
+    <div class="page" id="page-promocoes">
+      <div class="page-header">
+        <div class="page-title">Promoções</div>
+        <div class="page-subtitle">// gerencie os cards do carrossel de destaque</div>
+      </div>
+      <div class="toolbar">
+        <span style="font-size:13px;color:var(--muted);font-family:'DM Mono',monospace" id="promos-count"></span>
+        <button class="btn-primary" onclick="abrirNovaPromo()">+ Nova promoção</button>
+      </div>
+
+      <div id="form-nova-promo" style="display:none;margin-bottom:16px">
+        <div class="panel">
+          <div class="panel-title">Nova promoção <span class="new-badge">novo</span></div>
+          <div id="form-npromo-body"></div>
+        </div>
+      </div>
+
+      <div class="item-list" id="promos-list"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toast-icon"></span>
+  <span id="toast-msg"></span>
+</div>
+
+<!-- Confirm -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <h3 id="confirm-title">Confirmar</h3>
+    <p id="confirm-msg">Tem certeza?</p>
+    <div class="confirm-actions">
+      <button class="btn-secondary" onclick="fecharConfirm()">Cancelar</button>
+      <button class="btn-danger" id="confirm-ok-btn" onclick="confirmCallback && confirmCallback()">Confirmar</button>
+    </div>
   </div>
 </div>
 
 <script>
+/* ═══════════════════════════════════════
+   FIREBASE
+═══════════════════════════════════════ */
 const firebaseConfig = {
   apiKey: "AIzaSyChe4rWJphoPw4VQ1YM3OX72UmTvRKI2FE",
   authDomain: "tela-login-5062e.firebaseapp.com",
@@ -103,36 +508,22 @@ const firebaseConfig = {
   messagingSenderId: "685048984991",
   appId: "1:685048984991:web:dd6fcf2ecc92af1bbef9aa"
 };
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
-const promocoes = [
-  { id: 0, titulo: "PIJAMA VIRGINIA" },
-  { id: 1, titulo: "Kit Short Canelado" },
-  { id: 2, titulo: "Kit 10 Blusa Feminina" },
-];
-
-let selectedIndex = 0;
-let endTimes = {};
-
-function formatarRestante(ms) {
-  const total = Math.max(0, Math.floor(ms / 1000));
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-}
-
+/* ═══════════════════════════════════════
+   AUTH
+═══════════════════════════════════════ */
 auth.onAuthStateChanged(user => {
   if (user) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-screen').style.display = 'block';
     document.getElementById('user-email').textContent = user.email;
-    carregarTimers();
+    document.getElementById('user-avatar').textContent = user.email[0].toUpperCase();
+    inicializar();
   } else {
-    document.getElementById('login-screen').style.display = 'block';
+    document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('admin-screen').style.display = 'none';
   }
 });
@@ -148,13 +539,78 @@ async function fazerLogin() {
     err.textContent = 'Email ou senha incorretos.';
   }
 }
-
 function fazerLogout() { auth.signOut(); }
 
+/* ═══════════════════════════════════════
+   NAVEGAÇÃO
+═══════════════════════════════════════ */
+function navegar(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  el.classList.add('active');
+}
+
+/* ═══════════════════════════════════════
+   TOAST & CONFIRM
+═══════════════════════════════════════ */
+let toastTimer;
+function toast(msg, ok = true) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  document.getElementById('toast-icon').textContent = ok ? '✓' : '✕';
+  t.className = 'toast show ' + (ok ? 'ok' : 'err');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.classList.remove('show'); }, 3000);
+}
+
+let confirmCallback = null;
+function confirmar(title, msg, cb) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  confirmCallback = () => { fecharConfirm(); cb(); };
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+function fecharConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  confirmCallback = null;
+}
+document.getElementById('confirm-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('confirm-overlay')) fecharConfirm();
+});
+
+/* ═══════════════════════════════════════
+   INICIALIZAR
+═══════════════════════════════════════ */
+async function inicializar() {
+  await carregarTimers();
+  await carregarProdutos();
+  await carregarPromos();
+}
+
+/* ═══════════════════════════════════════
+   ───────── TIMERS ─────────
+═══════════════════════════════════════ */
+let timerPromos = [];
+let endTimes = {};
+let selectedIndex = 0;
+
+function formatarRestante(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
 async function carregarTimers() {
-  for (const p of promocoes) {
-    const snap = await db.ref('timers/promo_' + p.id).get();
-    endTimes[p.id] = snap.exists() ? snap.val() : null;
+  // Carrega promoções do Firebase para mostrar nos botões
+  const snap = await db.ref('promocoes').get();
+  timerPromos = snap.exists() ? Object.values(snap.val()) : [];
+
+  for (let i = 0; i < timerPromos.length; i++) {
+    const ts = await db.ref('timers/promo_' + i).get();
+    endTimes[i] = ts.exists() ? ts.val() : null;
   }
   renderSelector();
   setInterval(renderSelector, 1000);
@@ -163,12 +619,16 @@ async function carregarTimers() {
 function renderSelector() {
   const sel = document.getElementById('selector');
   sel.innerHTML = '';
-  promocoes.forEach(p => {
-    const restante = endTimes[p.id] ? endTimes[p.id] - Date.now() : null;
+  if (!timerPromos.length) {
+    sel.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>Nenhuma promoção cadastrada ainda</p></div>';
+    return;
+  }
+  timerPromos.forEach((p, i) => {
+    const restante = endTimes[i] ? endTimes[i] - Date.now() : null;
     const btn = document.createElement('button');
-    btn.className = 'sel-btn' + (p.id === selectedIndex ? ' active' : '');
-    btn.innerHTML = p.titulo + ' <span class="restante">' + (restante !== null ? formatarRestante(restante) : '—') + '</span>';
-    btn.onclick = () => { selectedIndex = p.id; renderSelector(); };
+    btn.className = 'sel-btn' + (i === selectedIndex ? ' active' : '');
+    btn.innerHTML = (p.titulo || 'Promoção ' + (i+1)) + ' <span class="restante">' + (restante !== null && restante > 0 ? formatarRestante(restante) : '— expirado') + '</span>';
+    btn.onclick = () => { selectedIndex = i; renderSelector(); };
     sel.appendChild(btn);
   });
 }
@@ -181,25 +641,551 @@ async function salvarTimer() {
   const status = document.getElementById('save-status');
   const btn = document.getElementById('btn-save');
   if (total <= 0) {
-    status.style.color = '#ff4444';
+    status.className = 'save-status status-err';
     status.textContent = 'Digite um tempo válido.';
     return;
   }
   btn.disabled = true;
-  btn.textContent = 'Salvando...';
+  btn.innerHTML = '<span class="spinner"></span> Salvando...';
   status.textContent = '';
   const endTime = Date.now() + total;
   await db.ref('timers/promo_' + selectedIndex).set(endTime);
   endTimes[selectedIndex] = endTime;
   btn.disabled = false;
-  btn.textContent = 'Salvar';
-  status.style.color = '#4caf50';
-  status.textContent = 'Salvo! Timer atualizado para todos.';
+  btn.textContent = 'Salvar timer';
+  status.className = 'save-status status-ok';
+  status.textContent = '✓ Timer atualizado para todos os visitantes.';
   document.getElementById('inp-h').value = '';
   document.getElementById('inp-m').value = '';
   document.getElementById('inp-s').value = '';
-  setTimeout(() => { status.textContent = ''; }, 3000);
+  setTimeout(() => { status.textContent = ''; }, 3500);
   renderSelector();
+}
+
+async function zerarTimer() {
+  if (!timerPromos.length) return;
+  confirmar('Zerar timer', 'A promoção vai aparecer como expirada para os visitantes. Continuar?', async () => {
+    await db.ref('timers/promo_' + selectedIndex).set(0);
+    endTimes[selectedIndex] = 0;
+    renderSelector();
+    toast('Timer zerado com sucesso');
+  });
+}
+
+/* ═══════════════════════════════════════
+   ───────── PRODUTOS ─────────
+═══════════════════════════════════════ */
+let produtos = [];
+
+async function carregarProdutos() {
+  const snap = await db.ref('produtos').get();
+  if (snap.exists()) {
+    produtos = Object.entries(snap.val()).map(([key, val]) => ({ _key: key, ...val }));
+  } else {
+    // Primeira vez: carrega dados hardcodados do index.html
+    produtos = getDadosPadrãoProdutos();
+    await salvarTodosProdutos();
+  }
+  renderProdutos();
+}
+
+function getDadosPadrãoProdutos() {
+  return [
+    { id:1, categoria:"Blusa", nome:"Kit 5 Blusas Feminina", descricao:"Fabricada com material principal de algodão, ela foi projetada pensando no bem-estar do seu corpo.", imagem:"img/ID1.png", galeria:["img/Kit 5 Blusas01.png","img/Kit 5 Blusas02.png"], features:["Algodão","Lisa","Passeio"], lojas:[{nome:"Shopee",preco:"R$ 78,66",parcelas:"12x de R$ 8,04",link:"https://s.shopee.com.br/5flSWgEUTF?share_channel_code=1"},{nome:"Mercado Livre",preco:"R$ 82,00",parcelas:"12x de R$ 8,40",link:"https://www.mercadolivre.com.br"}] },
+    { id:2, categoria:"Conjunto", nome:"Regata + Short", descricao:"Esse conjunto é a peça chave que faltava no seu guarda-roupa.", imagem:"img/Regata.jpg", galeria:["img/Regata01.png","img/Regata02.png"], features:["Suplex","alfaiataria"], lojas:[{nome:"Shopee",preco:"R$ 49,90",parcelas:"9x de R$ 6,31",link:"https://s.shopee.com.br/30khMfXDtB"}] },
+    { id:3, categoria:"Vestido", nome:"Vestido feminino", descricao:"Perfeito para qualquer ocasião.", imagem:"img/ID3.png", galeria:["img/Vestido01.png","img/Vestido02.png"], features:["Manga Curta","Casual","Verão e inverno"], lojas:[{nome:"Shopee",preco:"R$ 53,35",parcelas:"10x de R$ 6,12",link:"https://s.shopee.com.br/5VS2LznSMX"}] },
+    { id:4, categoria:"Casual", nome:"Cropped Regata", descricao:"Garanta o look perfeito para torcer com estilo e conforto!", imagem:"img/Brasil.jpg", galeria:["img/Brasil01.png","img/Brasil02.png"], features:["Lisa","Verão"], lojas:[{nome:"Shopee",preco:"R$ 31,98",parcelas:"6x de R$ 5,96",link:"https://s.shopee.com.br/1VvtibJC5p"}] },
+    { id:5, categoria:"Casual", nome:"Pijama Virginia", descricao:"Pijama confortável e estiloso, perfeito para noites de descanso.", imagem:"img/Promo01.jpg", galeria:["img/Promo01.jpg"], features:["Confortável","Macio","Dormir"], lojas:[{nome:"Shopee",preco:"R$ 21,67",parcelas:"",link:"https://s.shopee.com.br/4fsvUTE6gU"}] },
+    { id:6, categoria:"Conjunto", nome:"Kit Short Canelado", descricao:"Kit de shorts canelados, combinação perfeita de estilo e conforto.", imagem:"img/Promo02.jpg", galeria:["img/Promo02.jpg"], features:["Canelado","Casual","Verão"], lojas:[{nome:"Shopee",preco:"R$ 23,49",parcelas:"",link:"https://s.shopee.com.br/30khVbc9YK"}] },
+    { id:7, categoria:"Blusa", nome:"Kit 10 Blusa Feminina", descricao:"Kit com 10 blusas femininas variadas.", imagem:"img/Promo03.jpg", galeria:["img/Promo03.jpg"], features:["Algodão","Lisa","Passeio"], lojas:[{nome:"Shopee",preco:"R$ 59,98",parcelas:"",link:"https://s.shopee.com.br/175w8Cc7Y"}] }
+  ];
+}
+
+async function salvarTodosProdutos() {
+  const obj = {};
+  produtos.forEach(p => { const key = p._key || ('p' + p.id); obj[key] = { ...p }; delete obj[key]._key; });
+  await db.ref('produtos').set(obj);
+}
+
+function renderProdutos() {
+  document.getElementById('produtos-count').textContent = `${produtos.length} produto(s) cadastrado(s)`;
+  const list = document.getElementById('produtos-list');
+  list.innerHTML = '';
+  if (!produtos.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>Nenhum produto ainda. Clique em "Novo produto".</p></div>';
+    return;
+  }
+  produtos.forEach((p, idx) => {
+    const card = document.createElement('div');
+    card.className = 'item-card';
+    card.id = 'pcard-' + idx;
+    card.innerHTML = `
+      <div class="item-card-header" onclick="toggleProduto(${idx})">
+        ${p.imagem ? `<img class="item-thumb" src="${p.imagem}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="">` : ''}
+        <div class="item-thumb-ph" style="${p.imagem?'display:none':''}">📦</div>
+        <div class="item-info">
+          <div class="item-name">${p.nome}</div>
+          <div class="item-meta">${p.categoria} · ${p.lojas?.[0]?.preco || '—'}</div>
+        </div>
+        <div class="item-actions" onclick="event.stopPropagation()">
+          <button class="btn-icon del" onclick="deletarProduto(${idx})" title="Excluir">🗑</button>
+        </div>
+      </div>
+      <div class="item-form" id="pform-${idx}">
+        ${renderFormProduto(p, idx)}
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+function renderFormProduto(p, idx) {
+  const lojasHtml = (p.lojas || []).map((l, li) => `
+    <div class="loja-row" id="loja-${idx}-${li}">
+      <input class="form-input" placeholder="Nome (ex: Shopee)" value="${l.nome||''}" onchange="atualizarLoja(${idx},${li},'nome',this.value)">
+      <input class="form-input" placeholder="Preço" value="${l.preco||''}" onchange="atualizarLoja(${idx},${li},'preco',this.value)">
+      <input class="form-input" placeholder="Parcelas" value="${l.parcelas||''}" onchange="atualizarLoja(${idx},${li},'parcelas',this.value)">
+      <button class="btn-icon del" onclick="removerLoja(${idx},${li})" title="Remover loja">✕</button>
+      <input class="form-input" placeholder="Link" value="${l.link||''}" onchange="atualizarLoja(${idx},${li},'link',this.value)" style="grid-column:1/-1">
+    </div>`).join('');
+
+  const featsHtml = (p.features || []).map((f, fi) => `
+    <span class="feat-tag">${f}<button onclick="removerFeat(${idx},${fi})">×</button></span>`).join('');
+
+  const galeriaHtml = (p.galeria || []).map((src, gi) => `
+    <div class="galeria-item">
+      <img src="${src}" onerror="this.src=''">
+      <button class="del-gal" onclick="removerGaleria(${idx},${gi})">✕</button>
+    </div>`).join('');
+
+  return `
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Nome</label>
+        <input class="form-input" value="${p.nome||''}" onchange="updateProduto(${idx},'nome',this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Categoria</label>
+        <input class="form-input" value="${p.categoria||''}" onchange="updateProduto(${idx},'categoria',this.value)">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Descrição</label>
+        <textarea class="form-input form-textarea" onchange="updateProduto(${idx},'descricao',this.value)">${p.descricao||''}</textarea>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Imagem principal (URL ou caminho)</label>
+        <input class="form-input" value="${p.imagem||''}" onchange="updateProduto(${idx},'imagem',this.value)">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Galeria de fotos</label>
+        <div class="galeria-list" id="galeria-${idx}">${galeriaHtml}
+          <button class="btn-add-gal" onclick="adicionarGaleria(${idx})" title="Adicionar foto">+</button>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Características (pressione Enter para adicionar)</label>
+        <div class="features-input-wrap" onclick="this.querySelector('.feat-input').focus()">
+          <span id="feats-${idx}">${featsHtml}</span>
+          <input class="feat-input" placeholder="Ex: Algodão" onkeydown="addFeat(event,${idx},this)">
+        </div>
+      </div>
+    </div>
+    <div style="margin:14px 0 8px">
+      <div class="panel-title">Lojas</div>
+      <div id="lojas-${idx}">${lojasHtml}</div>
+      <button class="btn-add-loja" onclick="adicionarLoja(${idx})">+ Adicionar loja</button>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" onclick="toggleProduto(${idx})">Fechar</button>
+      <button class="btn-primary" onclick="salvarProduto(${idx})">💾 Salvar produto</button>
+    </div>`;
+}
+
+function toggleProduto(idx) {
+  const form = document.getElementById('pform-' + idx);
+  form.classList.toggle('open');
+}
+
+function updateProduto(idx, campo, valor) {
+  produtos[idx][campo] = valor;
+}
+
+function atualizarLoja(pidx, lidx, campo, valor) {
+  if (!produtos[pidx].lojas) produtos[pidx].lojas = [];
+  if (!produtos[pidx].lojas[lidx]) produtos[pidx].lojas[lidx] = {};
+  produtos[pidx].lojas[lidx][campo] = valor;
+}
+
+function adicionarLoja(idx) {
+  if (!produtos[idx].lojas) produtos[idx].lojas = [];
+  produtos[idx].lojas.push({ nome: '', preco: '', parcelas: '', link: '' });
+  renderProdutos();
+  document.getElementById('pform-' + idx).classList.add('open');
+}
+
+function removerLoja(pidx, lidx) {
+  produtos[pidx].lojas.splice(lidx, 1);
+  renderProdutos();
+  document.getElementById('pform-' + pidx).classList.add('open');
+}
+
+function addFeat(e, idx, input) {
+  if (e.key !== 'Enter') return;
+  const val = input.value.trim();
+  if (!val) return;
+  if (!produtos[idx].features) produtos[idx].features = [];
+  produtos[idx].features.push(val);
+  input.value = '';
+  const el = document.getElementById('feats-' + idx);
+  const span = document.createElement('span');
+  span.className = 'feat-tag';
+  const fi = produtos[idx].features.length - 1;
+  span.innerHTML = val + `<button onclick="removerFeat(${idx},${fi})">×</button>`;
+  el.appendChild(span);
+}
+
+function removerFeat(idx, fi) {
+  produtos[idx].features.splice(fi, 1);
+  renderProdutos();
+  document.getElementById('pform-' + idx).classList.add('open');
+}
+
+function adicionarGaleria(idx) {
+  const url = prompt('Cole a URL ou caminho da imagem:');
+  if (!url) return;
+  if (!produtos[idx].galeria) produtos[idx].galeria = [];
+  produtos[idx].galeria.push(url.trim());
+  renderProdutos();
+  document.getElementById('pform-' + idx).classList.add('open');
+}
+
+function removerGaleria(idx, gi) {
+  produtos[idx].galeria.splice(gi, 1);
+  renderProdutos();
+  document.getElementById('pform-' + idx).classList.add('open');
+}
+
+async function salvarProduto(idx) {
+  const p = { ...produtos[idx] };
+  const key = p._key;
+  delete p._key;
+  try {
+    if (key) {
+      await db.ref('produtos/' + key).set(p);
+    } else {
+      const ref = await db.ref('produtos').push(p);
+      produtos[idx]._key = ref.key;
+    }
+    toast('Produto salvo com sucesso!');
+    renderProdutos();
+    document.getElementById('pform-' + idx).classList.add('open');
+  } catch(e) {
+    toast('Erro ao salvar. Tente novamente.', false);
+  }
+}
+
+function deletarProduto(idx) {
+  const nome = produtos[idx].nome;
+  confirmar('Excluir produto', `Tem certeza que quer excluir "${nome}"? Essa ação não pode ser desfeita.`, async () => {
+    const key = produtos[idx]._key;
+    if (key) await db.ref('produtos/' + key).remove();
+    produtos.splice(idx, 1);
+    renderProdutos();
+    toast('Produto excluído.');
+  });
+}
+
+function abrirNovoProduto() {
+  const form = document.getElementById('form-novo-produto');
+  const body = document.getElementById('form-np-body');
+  form.style.display = 'block';
+  const novoProd = { nome:'', categoria:'', descricao:'', imagem:'', galeria:[], features:[], lojas:[{nome:'Shopee',preco:'',parcelas:'',link:''}] };
+  body.innerHTML = `
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Nome</label><input class="form-input" id="np-nome" placeholder="Nome do produto"></div>
+      <div class="form-group"><label class="form-label">Categoria</label><input class="form-input" id="np-cat" placeholder="Ex: Blusa, Conjunto..."></div>
+      <div class="form-group full"><label class="form-label">Descrição</label><textarea class="form-input form-textarea" id="np-desc" placeholder="Descrição do produto"></textarea></div>
+      <div class="form-group full"><label class="form-label">Imagem principal (URL ou caminho)</label><input class="form-input" id="np-img" placeholder="img/produto.jpg"></div>
+      <div class="form-group full"><label class="form-label">Características (Enter para adicionar)</label>
+        <div class="features-input-wrap" onclick="this.querySelector('.feat-input').focus()">
+          <span id="np-feats"></span>
+          <input class="feat-input" id="np-feat-input" placeholder="Ex: Algodão" onkeydown="addFeatNovo(event,this)">
+        </div>
+      </div>
+    </div>
+    <div style="margin:14px 0 8px">
+      <div class="panel-title">Lojas</div>
+      <div id="np-lojas">
+        <div class="loja-row">
+          <input class="form-input" placeholder="Nome" id="np-l0-nome" value="Shopee">
+          <input class="form-input" placeholder="Preço" id="np-l0-preco">
+          <input class="form-input" placeholder="Parcelas" id="np-l0-parc">
+          <span></span>
+          <input class="form-input" placeholder="Link" id="np-l0-link" style="grid-column:1/-1">
+        </div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" onclick="fecharNovoProduto()">Cancelar</button>
+      <button class="btn-primary" onclick="criarProduto()">✓ Criar produto</button>
+    </div>`;
+}
+
+let npFeats = [];
+function addFeatNovo(e, input) {
+  if (e.key !== 'Enter') return;
+  const val = input.value.trim();
+  if (!val) return;
+  npFeats.push(val);
+  input.value = '';
+  const el = document.getElementById('np-feats');
+  const span = document.createElement('span');
+  span.className = 'feat-tag';
+  span.innerHTML = val + `<button onclick="this.parentElement.remove();npFeats.splice(npFeats.indexOf('${val}'),1)">×</button>`;
+  el.appendChild(span);
+}
+
+async function criarProduto() {
+  const nome = document.getElementById('np-nome').value.trim();
+  if (!nome) { toast('Preencha pelo menos o nome.', false); return; }
+  const p = {
+    id: Date.now(),
+    nome,
+    categoria: document.getElementById('np-cat').value.trim(),
+    descricao: document.getElementById('np-desc').value.trim(),
+    imagem: document.getElementById('np-img').value.trim(),
+    galeria: [],
+    features: [...npFeats],
+    lojas: [{
+      nome: document.getElementById('np-l0-nome').value.trim(),
+      preco: document.getElementById('np-l0-preco').value.trim(),
+      parcelas: document.getElementById('np-l0-parc').value.trim(),
+      link: document.getElementById('np-l0-link').value.trim(),
+    }]
+  };
+  try {
+    const ref = await db.ref('produtos').push(p);
+    p._key = ref.key;
+    produtos.push(p);
+    npFeats = [];
+    fecharNovoProduto();
+    renderProdutos();
+    toast('Produto criado com sucesso!');
+  } catch(e) {
+    toast('Erro ao criar produto.', false);
+  }
+}
+
+function fecharNovoProduto() {
+  document.getElementById('form-novo-produto').style.display = 'none';
+  npFeats = [];
+}
+
+/* ═══════════════════════════════════════
+   ───────── PROMOÇÕES ─────────
+═══════════════════════════════════════ */
+let promos = [];
+
+async function carregarPromos() {
+  const snap = await db.ref('promocoes').get();
+  if (snap.exists()) {
+    promos = Object.entries(snap.val()).map(([key, val]) => ({ _key: key, ...val }));
+  } else {
+    promos = getDadosPadrãoPromos();
+    await salvarTodasPromos();
+  }
+  renderPromos();
+}
+
+function getDadosPadrãoPromos() {
+  return [
+    { titulo:"PIJAMA VIRGINIA", tag:"Roupa", preco:"R$ 21,67", precoOriginal:"R$ 39,90", desconto:"-46%", imagem:"img/Promo01.jpg", produtoId:5, duracao: 6 * 60 * 60 },
+    { titulo:"Kit Short Canelado", tag:"Roupa", preco:"R$ 23,99", precoOriginal:"R$ 80,00", desconto:"-70%", imagem:"img/Promo02.jpg", produtoId:6, duracao: 24 * 60 * 60 },
+    { titulo:"Kit 10 Blusa Feminina", tag:"Roupa", preco:"R$ 58,99", precoOriginal:"R$ 100,00", desconto:"-41%", imagem:"img/Promo03.jpg", produtoId:7, duracao: 6 * 60 * 60 },
+  ];
+}
+
+async function salvarTodasPromos() {
+  const obj = {};
+  promos.forEach((p, i) => { const key = p._key || ('promo' + i); obj[key] = { ...p }; delete obj[key]._key; });
+  await db.ref('promocoes').set(obj);
+}
+
+function renderPromos() {
+  document.getElementById('promos-count').textContent = `${promos.length} promoção(ões) no carrossel`;
+
+  // Sincroniza os botões de timer com as promos atuais
+  timerPromos = promos;
+  renderSelector();
+
+  const list = document.getElementById('promos-list');
+  list.innerHTML = '';
+  if (!promos.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">🔥</div><p>Nenhuma promoção ainda. Clique em "Nova promoção".</p></div>';
+    return;
+  }
+  promos.forEach((p, idx) => {
+    const card = document.createElement('div');
+    card.className = 'item-card';
+    card.innerHTML = `
+      <div class="item-card-header" onclick="togglePromo(${idx})">
+        ${p.imagem ? `<img class="item-thumb" src="${p.imagem}" onerror="this.style.display='none'" alt="">` : '<div class="item-thumb-ph">🔥</div>'}
+        <div class="item-info">
+          <div class="item-name">${p.titulo||'Sem título'} <span style="font-size:11px;color:var(--accent);font-family:DM Mono,monospace">${p.desconto||''}</span></div>
+          <div class="item-meta">${p.preco||'—'} · antes ${p.precoOriginal||'—'}</div>
+        </div>
+        <div class="item-actions" onclick="event.stopPropagation()">
+          <button class="btn-icon del" onclick="deletarPromo(${idx})" title="Excluir">🗑</button>
+        </div>
+      </div>
+      <div class="item-form" id="promoform-${idx}">
+        ${renderFormPromo(p, idx)}
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+function renderFormPromo(p, idx) {
+  // Monta opções de produtos para o select
+  const opts = produtos.map(prod => `<option value="${prod.id}" ${prod.id == p.produtoId ? 'selected' : ''}>${prod.nome}</option>`).join('');
+  return `
+    <div class="form-grid cols3">
+      <div class="form-group full">
+        <label class="form-label">Título do carrossel</label>
+        <input class="form-input" value="${p.titulo||''}" onchange="updatePromo(${idx},'titulo',this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tag</label>
+        <input class="form-input" value="${p.tag||''}" onchange="updatePromo(${idx},'tag',this.value)" placeholder="Ex: Roupa">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Preço promocional</label>
+        <input class="form-input" value="${p.preco||''}" onchange="updatePromo(${idx},'preco',this.value)" placeholder="R$ 0,00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Preço original</label>
+        <input class="form-input" value="${p.precoOriginal||''}" onchange="updatePromo(${idx},'precoOriginal',this.value)" placeholder="R$ 0,00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Badge desconto</label>
+        <input class="form-input" value="${p.desconto||''}" onchange="updatePromo(${idx},'desconto',this.value)" placeholder="-50%">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Duração padrão (horas)</label>
+        <input class="form-input" type="number" value="${Math.round((p.duracao||0)/3600)}" onchange="updatePromo(${idx},'duracao',this.value*3600)">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Imagem (URL ou caminho)</label>
+        <input class="form-input" value="${p.imagem||''}" onchange="updatePromo(${idx},'imagem',this.value)" placeholder="img/promo.jpg">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Produto vinculado (abre o modal)</label>
+        <select class="form-input" onchange="updatePromo(${idx},'produtoId',parseInt(this.value))">
+          <option value="">— Selecionar produto —</option>
+          ${opts}
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" onclick="togglePromo(${idx})">Fechar</button>
+      <button class="btn-primary" onclick="salvarPromo(${idx})">💾 Salvar promoção</button>
+    </div>`;
+}
+
+function togglePromo(idx) {
+  document.getElementById('promoform-' + idx).classList.toggle('open');
+}
+
+function updatePromo(idx, campo, valor) {
+  promos[idx][campo] = valor;
+}
+
+async function salvarPromo(idx) {
+  const p = { ...promos[idx] };
+  const key = p._key;
+  delete p._key;
+  try {
+    if (key) {
+      await db.ref('promocoes/' + key).set(p);
+    } else {
+      const ref = await db.ref('promocoes').push(p);
+      promos[idx]._key = ref.key;
+    }
+    // Atualiza timer também
+    timerPromos = promos;
+    renderSelector();
+    toast('Promoção salva com sucesso!');
+    renderPromos();
+    document.getElementById('promoform-' + idx).classList.add('open');
+  } catch(e) {
+    toast('Erro ao salvar. Tente novamente.', false);
+  }
+}
+
+function deletarPromo(idx) {
+  const nome = promos[idx].titulo;
+  confirmar('Excluir promoção', `Tem certeza que quer excluir "${nome}"? Ela vai sumir do carrossel.`, async () => {
+    const key = promos[idx]._key;
+    if (key) await db.ref('promocoes/' + key).remove();
+    // Remove o timer correspondente
+    await db.ref('timers/promo_' + idx).remove();
+    promos.splice(idx, 1);
+    renderPromos();
+    toast('Promoção excluída.');
+  });
+}
+
+function abrirNovaPromo() {
+  const form = document.getElementById('form-nova-promo');
+  const body = document.getElementById('form-npromo-body');
+  form.style.display = 'block';
+  const opts = produtos.map(prod => `<option value="${prod.id}">${prod.nome}</option>`).join('');
+  body.innerHTML = `
+    <div class="form-grid cols3">
+      <div class="form-group full"><label class="form-label">Título</label><input class="form-input" id="npromo-titulo" placeholder="Nome da promoção"></div>
+      <div class="form-group"><label class="form-label">Tag</label><input class="form-input" id="npromo-tag" value="Roupa"></div>
+      <div class="form-group"><label class="form-label">Preço promocional</label><input class="form-input" id="npromo-preco" placeholder="R$ 0,00"></div>
+      <div class="form-group"><label class="form-label">Preço original</label><input class="form-input" id="npromo-original" placeholder="R$ 0,00"></div>
+      <div class="form-group"><label class="form-label">Badge</label><input class="form-input" id="npromo-desc" placeholder="-50%"></div>
+      <div class="form-group"><label class="form-label">Duração padrão (h)</label><input class="form-input" type="number" id="npromo-dur" value="6"></div>
+      <div class="form-group full"><label class="form-label">Imagem</label><input class="form-input" id="npromo-img" placeholder="img/promo.jpg"></div>
+      <div class="form-group full"><label class="form-label">Produto vinculado</label>
+        <select class="form-input" id="npromo-pid"><option value="">— Selecionar —</option>${opts}</select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" onclick="fecharNovaPromo()">Cancelar</button>
+      <button class="btn-primary" onclick="criarPromo()">✓ Criar promoção</button>
+    </div>`;
+}
+
+async function criarPromo() {
+  const titulo = document.getElementById('npromo-titulo').value.trim();
+  if (!titulo) { toast('Preencha o título.', false); return; }
+  const dur = parseInt(document.getElementById('npromo-dur').value) || 6;
+  const p = {
+    titulo,
+    tag: document.getElementById('npromo-tag').value.trim(),
+    preco: document.getElementById('npromo-preco').value.trim(),
+    precoOriginal: document.getElementById('npromo-original').value.trim(),
+    desconto: document.getElementById('npromo-desc').value.trim(),
+    imagem: document.getElementById('npromo-img').value.trim(),
+    produtoId: parseInt(document.getElementById('npromo-pid').value) || null,
+    duracao: dur * 3600,
+  };
+  try {
+    const ref = await db.ref('promocoes').push(p);
+    p._key = ref.key;
+    promos.push(p);
+    fecharNovaPromo();
+    renderPromos();
+    toast('Promoção criada com sucesso!');
+  } catch(e) {
+    toast('Erro ao criar promoção.', false);
+  }
+}
+
+function fecharNovaPromo() {
+  document.getElementById('form-nova-promo').style.display = 'none';
 }
 </script>
 </body>
